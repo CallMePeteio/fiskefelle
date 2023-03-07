@@ -1,21 +1,134 @@
 {% extends "base.html" %} {% block title %}Home{% endblock %} {% block content
 %}
-<h1 align="center">Notes</h1>
-<ul class="list-group list-group-flush" id="notes">
-  {% for note in user.notes %}
-  <li class="list-group-item">
-    {{ note.data }}
-    <button type="button" class="close" onClick="deleteNote({{ note.id }})">
-      <span aria-hidden="true">&times;</span>
-    </button>
-  </li>
-  {% endfor %}
-</ul>
-<form method="POST">
-  <textarea name="note" id="note" class="form-control"></textarea>
-  <br />
-  <div align="center">
-    <button type="submit" class="btn btn-primary">Add Note</button>
+
+<style>
+  .button-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 50px;
+  }
+  
+  .button {
+    width: 200px;
+    height: 50px;
+    margin-bottom: 10px;
+    font-size: 20px;
+    font-weight: bold;
+  }
+
+  /* Custom styles for the buttons */
+  .btn-primary {
+    background-color: #f7f7f7;
+    border-color: #3B444B;
+    border-width: 2px;
+    color: #3B444B; 
+  }
+
+  .btn-primary:hover {
+    background-color: #f7f7f7;
+    border-color: #0062cc;
+    color: #3B444B; 
+  }
+
+  .btn-danger {
+    background-color: #f7f7f7;
+    border-color: #3B444B;
+    border-width: 2px;
+    color: #3B444B; 
+  }
+
+  .btn-danger:hover {
+    background-color: #f7f7f7;
+    border-color: #D22B2B;
+    color: #3B444B; 
+
+  }
+
+  .btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
+  }
+
+  .btn-success:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+  }
+
+  .btn-warning {
+    background-color: #ffc107;
+    border-color: #ffc107;
+  }
+
+  .btn-warning:hover {
+    background-color: #e0a800;
+    border-color: #d39e00;
+  }
+  
+  #camera-container {
+    margin-top: 50px;
+  }
+  
+  #camera {
+    width: 100%;
+    height: 500px;
+  }
+</style>
+</head>
+<body>
+<div class="container-fluid">
+  <div class="row">
+    
+    <!-- Camera Container -->
+    <div class="col-md-12" id="camera-container">
+      <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" allowfullscreen id="camera"></iframe>
+    </div>
+
+    <div style="padding-top: 90vh;"></div>
+    
+    <!-- Port Container -->
+    <div class="col-md-3 float-end">
+      <div class="card">
+        <div class="card-header">Port</div>
+        <div class="card-body"> 
+          
+          <div class="list-group">
+            <button class="btn btn-primary button">Åpne port</button>
+            <button class="btn btn-danger button">Lukk port</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    
+    <!-- Misc Container -->
+    <div class="col-md-3 float-end">
+      <div class="card">
+        <div class="card-header">Misc</div>
+        <div class="card-body"> 
+          
+          <div class="list-group">
+            <button class="btn btn-primary button">Lys På</button>
+            <button class="btn btn-danger button">Lys Av</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-</form>
+  
+
+  <!--
+  <div class="col-md-3 float-end">
+    <div class="card">
+      <div class="card-header">Informasjon</div>
+      <div class="card-body"> 
+        
+        <p>Oppetid: 12dager</p>
+      </div>
+    </div>
+  </div>-->
+</div>
+
+<div style="padding-top: 70vh"></div>
+
 {% endblock %}
