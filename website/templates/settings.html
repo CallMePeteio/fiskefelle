@@ -1,0 +1,117 @@
+{% extends "base.html" %} {% block title %}Settings{% endblock %} {% block content%}
+
+
+    {% if isAdmin == True %}
+        <div class="row justify-content-left pt-4 flex-row">
+            <div class="col-md-6">
+              <div class="card mb-3">
+                <div class="card-header">
+                  <h4>Create New User</h4>
+                </div>
+                <div class="card-body">
+                  <form method="post">
+                    <div class="form-group">
+                      <label for="username">Username:</label>
+                      <input type="email" class="form-control" id="email" name="email" placeholder="Enter email"/>
+                    </div>
+                    <div class="form-group">
+                      <label for="password">Password:</label>
+                      <input type="password" class="form-control" id="password" name="password" placeholder="Enter password"/>
+                    </div>
+                    <div class="row">
+                      <div class="col-md-6">
+                        <input type="submit" class="btn btn-primary" name="createUser" value="Create User">
+                      </div>
+                      <div class="col-md-6 text-right">
+                        <div class="form-group form-check-inline">
+                          <input type="checkbox" class="form-check-input" id="checkbox" name="checkbox">
+                          <label class="form-check-label" for="checkbox">Make Admin</label>
+                        </div>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        <div class="pt-4"></div>
+
+        <div class="row mt-3">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>User Logins</h4>
+                    </div>
+                    <div class="card-body">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Last Login Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>user1</td>
+                                    <td>2023-03-13 10:30:45</td>
+                                </tr>
+                                <tr>
+                                    <td>user2</td>
+                                    <td>2023-03-12 18:45:21</td>
+                                </tr>
+                                <tr>
+                                    <td>user3</td>
+                                    <td>2023-03-10 09:15:32</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Total Fiskeffeler</h4>
+                    </div>
+                    <div class="card-body">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Lokasjon</th>
+                                    <th>Sist åpnet</th>
+                                    <th>Total Fisk Slippet Igjennom</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>berlevåg</td>
+                                    <td>2023-03-13 10:30:45</td>
+                                    <td>18</td>
+                                </tr>
+                                <tr>
+                                    <td>Beiarn</td>
+                                    <td>2023-03-12 18:45:21</td>
+                                    <td>23</td>
+                                </tr>
+                                <tr>
+                                    <td>Namsen</td>
+                                    <td>2023-03-10 09:15:32</td>
+                                    <td>2</td>
+
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    {% elif isAdmin == False%}
+        {% include 'error.html' %}
+    {% endif %}
+    
+
+    
+
+
+{% endblock %}

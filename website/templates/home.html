@@ -81,11 +81,9 @@
     
     <!-- Camera Container -->
     <div class="col-md-12" id="camera-container">
-      <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" allowfullscreen id="camera"></iframe>
+      <iframe src="https://www.youtube.com/watch?v=Lj0qrvWMv_o&ab_channel=Forsvaret" frameborder="0" allowfullscreen id="camera"></iframe>
     </div>
 
-    <div style="padding-top: 90vh;"></div>
-    
     <!-- Port Container -->
     <div class="col-md-3 float-end">
       <div class="card">
@@ -93,14 +91,15 @@
         <div class="card-body"> 
           
           <div class="list-group">
-            <button class="btn btn-primary button">Åpne port</button>
-            <button class="btn btn-danger button">Lukk port</button>
+            <form method="post">
+              <button class="btn btn-primary button" name="gate" value="open">Åpne port</button>
+              <button class="btn btn-danger button" name="gate" value="close">Lukk port</button>
+            </form>
           </div>
         </div>
       </div>
     </div>
 
-    
     <!-- Misc Container -->
     <div class="col-md-3 float-end">
       <div class="card">
@@ -108,8 +107,10 @@
         <div class="card-body"> 
           
           <div class="list-group">
-            <button class="btn btn-primary button">Lys På</button>
-            <button class="btn btn-danger button">Lys Av</button>
+            <form method="post">
+              <button class="btn btn-primary button">Lys På</button>
+              <button class="btn btn-danger button">Lys Av</button>
+            </form>
           </div>
         </div>
       </div>

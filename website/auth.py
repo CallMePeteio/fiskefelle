@@ -1,8 +1,17 @@
-from flask import Blueprint, render_template, request, flash, redirect, url_for
-from .models import User
-from werkzeug.security import generate_password_hash, check_password_hash
-from . import db   ##means from __init__.py import db
+
+
+
+from flask import Blueprint, render_template, request, flash, redirect, url_for, session
 from flask_login import login_user, login_required, logout_user, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
+
+from . import maxLoginAtemts
+from . import selectFromDB
+from . import timeoutMin
+from .models import User
+from . import pathToDB
+from . import db 
+
 
 
 auth = Blueprint('auth', __name__)
@@ -10,22 +19,32 @@ auth = Blueprint('auth', __name__)
 
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
 
-        user = User.query.filter_by(email=email).first()
-        if user:
-            if check_password_hash(user.password, password):
-                flash('Logged in successfully!', category='success')
-                login_user(user, remember=True)
-                return redirect(url_for('views.home'))
+    if request.method == 'POST': # IF THE USER HAS CLICKED THE "login" BUTTON
+        email = request.form.get('email') # GETS THE EMAIL FROM THE INPUT BOX 
+        password = request.form.get('password') # GETS THE PASSWORD FROM THE INPUT BOX
+        user = User.query.filter_by(email=email).first() # GETS IF THE USER EXISTS
+
+        if user: # IF THE USER EXISTS 
+            if check_password_hash(user.password, password): # CHECK IF THE PASSWORD IS CORRECT (unhases the password)
+                flash('Logged in successfully!', category='success') # FLASHES THE INPUT MESSAGE
+                login_user(user, remember=True) # LOGS IN THE USER
+
+                isAdmin = selectFromDB(pathToDB, "user", ["WHERE"], ["id"], [current_user.id], log=False)
+                if isAdmin[0][len(isAdmin[0]) -1] == 1:
+                    print(True)
+                    session["isAdmin"] = True
+                else: 
+                    session["isAdmin"] = False
+
+                return redirect(url_for('views.home')) # REDIRECTS THE USER TO HOME
+
             else:
-                flash('Incorrect password, try again.', category='error')
+                flash('Incorrect password, try again.', category='error') # FLASHES THE INCORRECT PASSWORD MESSAGE 
         else:
-            flash('Email does not exist.', category='error')
+            flash('Email does not exist.', category='error') # FLASHES THE EMAIL DOES NOT EXIST MESSAGE
 
-    return render_template("login.html", user=current_user)
+    return render_template("login.html", user=current_user) # RENDERS "login.html"
 
 
 @auth.route('/logout')
@@ -33,6 +52,31 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for('auth.login'))
+
+
+@auth.route('/debug')
+def debug():
+
+    loginEmail = "admin@gmail.com" # ALLE DE FORKJELLIGE BRUKERNAVNENE PÅ NETTSIDENM
+    loginPaswd = "Passord1" # ALLE DE FORKJELLIGE PASSORDENE TIL NETTSIDENE
+
+    user = User(email=loginEmail, password=generate_password_hash(loginPaswd, method='sha256'), admin=True)
+    db.session.add(user)
+    db.session.commit()
+
+
+    return render_template("base.html", user=current_user)
+
+  
+
+
+
+
+
+
+
+
+
 
 
 #@auth.route('/sign-up', methods=['GET', 'POST'])
