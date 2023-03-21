@@ -30,13 +30,18 @@ def login():
                 flash('Logged in successfully!', category='success') # FLASHES THE INPUT MESSAGE
                 login_user(user, remember=True) # LOGS IN THE USER
 
-                isAdmin = selectFromDB(pathToDB, "user", ["WHERE"], ["id"], [current_user.id], log=False)
+                isAdmin = selectFromDB(pathToDB, "user", ["WHERE"], ["id"], [current_user.id], log=True)
                 if isAdmin[0][len(isAdmin[0]) -1] == 1:
-                    print(True)
-                    session["isAdmin"] = True
-                else: 
+                    camTable = selectFromDB(pathToDB, "camera", ["WHERE"], log=False) # GETS ALL OF THE ROWS FROM THE "camera" TABLE
+                    session["currentVidIp"] = camTable[0][3] # GETS THE FIRST INDEX'S ID, TO GET A STARTING POINT
+                    session["isAdmin"] = True # SETS THE USER AS ADMIN
+                    session['cameraTable'] = camTable # SETS THE RECIVE DATA TO A GLOBAL VARIABLE, IM USING THIS TO CASH THE TABLE "cameras", SO I DONT HAFT TO READ FORM THE DB EVRYTIME I MAKE A REQUEST
+                
+                else:
+                    camTableNotAdmin = selectFromDB(pathToDB, "camera", ["WHERE"], ["adminView"], [False], log=True) # GETS THE CAM TABLE, THAT NONADMIN USERS CAN VIEW 
+                    session["currentVidIp"] = camTableNotAdmin[0][3] # GETS THE FIRST INDEX'S ID, TO GET A STARTING POINT
                     session["isAdmin"] = False
-
+                    session['cameraTable'] = camTableNotAdmin # SETS THE RECIVE DATA TO A GLOBAL VARIABLE, IM USING THIS TO CASH THE TABLE "cameras", SO I DONT HAFT TO READ FORM THE DB EVRYTIME I MAKE A REQUEST
                 return redirect(url_for('views.home')) # REDIRECTS THE USER TO HOME
 
             else:
@@ -44,7 +49,7 @@ def login():
         else:
             flash('Email does not exist.', category='error') # FLASHES THE EMAIL DOES NOT EXIST MESSAGE
 
-    return render_template("login.html", user=current_user) # RENDERS "login.html"
+    return render_template("login.html", user=current_user, isAdmin=False, cameraName=False) # RENDERS "login.html"
 
 
 @auth.route('/logout')

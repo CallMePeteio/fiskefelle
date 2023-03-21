@@ -73,16 +73,108 @@
     width: 100%;
     height: 500px;
   }
+    .dropdown-toggle {
+    background-color: #f7f7f7;
+    border-color: #3B444B;
+    border-width: 2px;
+    color: #3B444B;
+  }
+
+  .dropdown-toggle:hover {
+    background-color: #f7f7f7;
+    border-color: #0062cc;
+    color: #3B444B;
+  }
+
+  .dropdown-item {
+    background-color: #f7f7f7;
+    border-color: #3B444B;
+    border-width: 2px;
+    color: #3B444B;
+  }
+
+  .dropdown-item:hover {
+    background-color: #f7f7f7;
+    border-color: #D22B2B;
+    color: #3B444B;
+  }
+  #iframe-wrapper {
+  position: relative;
+}
+
+.dropdown {
+  position: absolute;
+  top: 10px;
+  right: 25px;
+}
+
+.dropdown-toggle {
+  background-color: #f7f7f7;
+  border-color: #3B444B;
+  border-width: 2px;
+  color: #3B444B;
+  padding: 5px 10px;
+}
+
+.dropdown-toggle:hover {
+  background-color: #f7f7f7;
+  border-color: #0062cc;
+  color: #3B444B;
+}
+
+.dropdown-menu {
+  border-color: #3B444B;
+  border-width: 2px;
+}
+
+.dropdown-item {
+  background-color: #f7f7f7;
+  border-color: #3B444B;
+  border-width: 2px;
+  color: #3B444B;
+}
+
+.dropdown-item:hover {
+  background-color: #f7f7f7;
+  border-color: #D22B2B;
+  color: #3B444B;
+}
 </style>
-</head>
-<body>
 <div class="container-fluid">
   <div class="row">
     
     <!-- Camera Container -->
     <div class="col-md-12" id="camera-container">
-      <iframe src="https://www.youtube.com/watch?v=Lj0qrvWMv_o&ab_channel=Forsvaret" frameborder="0" allowfullscreen id="camera"></iframe>
-    </div>
+      <div class="iframe-wrapper">
+        <iframe src={{ camIp }} frameborder="0" allowfullscreen id="camera"></iframe>
+        <div class="dropdown">
+          <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Select a Camera
+          </button>
+          <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+            <form method="post">
+
+              {% if cameraName != False %} <!-- If the cameras shuld show -->
+                {% if cameraName[1] >= 1 %} <!-- If there is less than 2 items hide the dropdown-->
+                  {% for camera in cameraData %} <!-- Loops over all of the camera rows that is cashed-->
+                  
+                    {% if camera[4] == 1 %} <!-- if the picture is only supposed to be shown to the admin -->
+                      {% if isAdmin == True %} <!-- if the admin is logged in -->
+                        <button type="submit" class="dropdown-item" name="camera" value={{ camera[0] }} id={{ camera[0] }}>{{ camera[2] }}</button>
+                      {% endif %}
+                    {% else %}
+                      <button type="submit" class="dropdown-item" name="camera" value={{ camera[0] }} id={{ camera[0] }}>{{ camera[2] }}</button>
+
+                    {% endif %}
+                  {% endfor %}
+                {% endif %}
+              {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>  
+
+
 
     <!-- Port Container -->
     <div class="col-md-3 float-end">

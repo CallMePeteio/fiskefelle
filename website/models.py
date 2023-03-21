@@ -14,6 +14,16 @@ class User(db.Model, UserMixin):
 
 
 
+class Camera(db.Model): 
+    __tablename__ = 'camera'
+    id = db.Column(db.Integer, primary_key=True)
+    userId = db.Column(db.Integer, db.ForeignKey('user.id'))
+    name = db.Column(db.String(150))
+    ipAdress = db.Column(db.String(150))
+    adminView = db.Column(db.Boolean)
+
+
+
 class Log(db.Model): 
     __tablename__ = 'log'
     id = db.Column(db.Integer, primary_key=True)

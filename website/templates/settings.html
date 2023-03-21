@@ -2,6 +2,8 @@
 
 
     {% if isAdmin == True %}
+
+        <!-- Create user -->
         <div class="row justify-content-left pt-4 flex-row">
             <div class="col-md-6">
               <div class="card mb-3">
@@ -10,24 +12,29 @@
                 </div>
                 <div class="card-body">
                   <form method="post">
+
                     <div class="form-group">
                       <label for="username">Username:</label>
                       <input type="email" class="form-control" id="email" name="email" placeholder="Enter email"/>
                     </div>
+
                     <div class="form-group">
                       <label for="password">Password:</label>
                       <input type="password" class="form-control" id="password" name="password" placeholder="Enter password"/>
                     </div>
+
                     <div class="row">
                       <div class="col-md-6">
                         <input type="submit" class="btn btn-primary" name="createUser" value="Create User">
                       </div>
+
                       <div class="col-md-6 text-right">
                         <div class="form-group form-check-inline">
-                          <input type="checkbox" class="form-check-input" id="checkbox" name="checkbox">
+                          <input type="checkbox" class="form-check-input" id="newUserCheckbox" name="newUserCheckbox">
                           <label class="form-check-label" for="checkbox">Make Admin</label>
                         </div>
                       </div>
+
                     </div>
                   </form>
                 </div>
@@ -36,6 +43,7 @@
           </div>
         <div class="pt-4"></div>
 
+        <!-- User logins -->
         <div class="row mt-3">
             <div class="col-md-6">
                 <div class="card">
@@ -68,6 +76,8 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Total Fiskefelle -->
             <div class="col-md-6">
                 <div class="card">
                     <div class="card-header">
@@ -103,10 +113,93 @@
                         </table>
                     </div>
                 </div>
-            </div>
+            </div> 
         </div>
 
-    {% elif isAdmin == False%}
+        
+        <div class="pt-4"></div>
+
+        
+        <!-- Add new camera -->
+        <div class="row justify-content-left pt-4 flex-row">
+          <div class="col-md-6">
+              <div class="card mb-3">
+                  <div class="card-header">
+                      <h4>Add New Camera</h4>
+                  </div>
+                  <div class="card-body">
+                      <form method="post">
+                          <div class="form-group">
+                              <label for="password">Name</label>
+                              <input type="text" class="form-control" id="camName" name="camName" placeholder="Enter the name of the camera"/>
+                          </div>
+                          <div class="form-group">
+                              <label for="username">Ip adress</label>
+                              <input type="text" class="form-control" id="camIpAdress" name="camIpAdress" placeholder="Camera ip adress and port"/>
+                          </div>
+                          <div class="row">
+                              <div class="col-md-6">
+                                  <input type="submit" class="btn btn-primary" name="createCam" value="Add Camera">
+                              </div>
+                              <div class="col-md-6 text-right">
+                                  <div class="form-group form-check-inline">
+                                      <input type="checkbox" class="form-check-input" id="newCamCheckbox" name="newCamCheckbox">
+                                      <label class="form-check-label" for="checkbox">Must be admin</label>
+                                  </div>
+                              </div>
+                          </div>
+                      </form>
+                  </div>
+              </div>
+          </div>
+
+          <!-- Delete camera -->
+          <div class="col-md-6">
+              <div class="card">
+                  <div class="card-header">
+                      <h4>Delete Camera</h4>
+                  </div>
+                  <div class="card-body">
+                      <table class="table">
+                          <thead>
+                              <tr>
+                                  <th>Name</th>
+                                  <th>Ip Adress</th>
+                                  <th>Admin View</th>
+                                  <th>Delete</th>
+                              </tr>
+                          </thead>
+                          <tbody>
+                            {% for camera in cameraData %}
+                            <tr>
+                              <td>{{ camera[2] }}</td>
+                              <td>{{ camera[3] }}</td>
+                              {% if camera[4] == 0 %}
+                                <td>False</td>
+                              {% elif camera[4] == 1 %}
+                                <td>True</td>
+                              {% endif %}
+                              <td>
+                                <form method="post">
+                                  <input type="hidden" name="deleteCamId" value="{{ camera[0] }}">
+                                  <button type="submit" class="btn btn-secondary" name="deleteCamBtn">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                                      <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                                      <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                                    </svg>
+                                  </button>
+                                </form>
+                              </td>
+                            </tr>
+                            {% endfor %}
+                          </tbody>
+                      </table>
+                  </div>
+              </div>
+          </div>
+        </div>
+        
+    {% elif isAdmin == False %}
         {% include 'error.html' %}
     {% endif %}
     

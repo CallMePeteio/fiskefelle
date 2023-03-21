@@ -39,6 +39,7 @@ Returns:
 The function returns a Flask application instance.
 """
 def create_app():
+
     app = Flask(__name__) # Creates an instance of Flask application with the given name
     app.config['SECRET_KEY'] = 'hjshjhdjah kjshkjdhjs' # Sets the secret key used for signing session cookies
     app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_NAME}' # Sets the URI of the SQLite database
@@ -64,6 +65,10 @@ def create_app():
         return User.query.get(int(id)) # Defines a callback function to load a user from the database
 
     return app # Returns the Flask app instance
+
+
+
+
 
 """
 ___________________________________ create_database ___________________________________
@@ -100,39 +105,63 @@ valueList = This is the list of values you add to the column list.
 argument = This is the argument you want to do, forexample could you add AND.
 """
 
-def selectFromDB(dbPath, table, argumentList, columnList, valueList, log=True):
+def selectFromDB(dbPath, table, argumentList=None, columnList=None, valueList=None, log=True):
       
     con = sqlite3.connect(dbPath) # CONNECTS TO THE DB
     cursor = con.cursor() # MAKES THE CURSOR, FOR SELECTING THE DATA
+    if argumentList != None and columnList != None and valueList != None: 
 
-    getString = f"SELECT * FROM '{table}' {argumentList[0]} {columnList[0]}=?" # THIS IS THE STRING THAT IS GOING TO BE THE SQLITE COMMAND, ALREADY ADDED THE FIRST DATAPOINT
-
-    if len(columnList) == len(valueList) or len(columnList) == 0 or len(valueList) == 0: # CHECKS IF THERE IS AN ERROR ON THE LENGTH OF THE INPUT PARAMETERS
-
-        if len(columnList) >= 1: # IF THE INPUT PARAMETERS IS MORE THAN ONE, THEN IT ADDS THE AND SYNTAX AND THE PARAMETER TO THE GETSTRING VARIABLE
-            for i, parameter in enumerate(columnList[1:]): # LOOPS OVER ALL OF THE EXTRA "AND" PARAMETERS
-                getString += f"{argumentList[i+1]} {parameter}=?"
-
+        getString = f"SELECT * FROM '{table}' {argumentList[0]} {columnList[0]}=?" # THIS IS THE STRING THAT IS GOING TO BE THE SQLITE COMMAND, ALREADY ADDED THE FIRST DATAPOINT
+        if len(columnList) == len(valueList) or len(columnList) == 0 or len(valueList) == 0: # CHECKS IF THERE IS AN ERROR ON THE LENGTH OF THE INPUT PARAMETERS
+            if len(columnList) >= 1: # IF THE INPUT PARAMETERS IS MORE THAN ONE, THEN IT ADDS THE AND SYNTAX AND THE PARAMETER TO THE GETSTRING VARIABLE
+                for i, parameter in enumerate(columnList[1:]): # LOOPS OVER ALL OF THE EXTRA "AND" PARAMETERS
+                    getString += f"{argumentList[i+1]} {parameter}=?"
 
 
-            cursor.execute(getString, (valueList)) # SELECTS ALL OF THE DATA ACCORDING TO THE PARAMETERS GIVEN ABOVE
-            data = cursor.fetchall() # FETCHES ALL OF THE DATA
+
+                cursor.execute(getString, (valueList)) # SELECTS ALL OF THE DATA ACCORDING TO THE PARAMETERS GIVEN ABOVE
+                data = cursor.fetchall() # FETCHES ALL OF THE DATA
+
+                if log == True: # IF THE RESULTS SHULD BE LOGGED
+                    logging.info(f"     Readed data from databace, command: {getString}{valueList}") # LOGS THE DATA
+                    logging.debug(f"    data recived: {data}")
+
+                return data # RETURNS ALL OF THE DATA
+
+
+            cursor.execute(getString, (valueList[0],)) # SELECTS ALL OF THE GPS DATA, WE DO THIS TWICE BECAUSE THE SYNTAX OF THIS SUCS ;(, I NEED TI HAVE TRHE COMMA THERE WHAT A SHIT LIBARY
+            data = cursor.fetchall() # FETCHES ALL OF THE DATA, GIVEN THE PARAMETERS ABOVE
 
             if log == True: # IF THE RESULTS SHULD BE LOGGED
-                logging.info(f"     Readed data from databace, command: {getString}{valueList}") # LOGS THE DATA
+                logging.info(f"     Databace command (read): {getString}{valueList}") # LOGS THE DATA
                 logging.debug(f"    data recived: {data}")
 
             return data # RETURNS ALL OF THE DATA
 
-
-        cursor.execute(getString, (valueList[0],)) # SELECTS ALL OF THE GPS DATA, WE DO THIS TWICE BECAUSE THE SYNTAX OF THIS SUCS ;(, I NEED TI HAVE TRHE COMMA THERE WHAT A SHIT LIBARY
-        data = cursor.fetchall() # FETCHES ALL OF THE DATA, GIVEN THE PARAMETERS ABOVE
+        else: 
+          raise Exception(f"Parameter error when reading from DB, there has to be a value for eatch parameter. Parameters: {columnList}, Values: {valueList}") # IF THERE WAS A ERROR OF THE LENGHT OF THE DATA
+    else: 
+        getString = f"SELECT * FROM '{table}'" # THIS IS THE STRING THAT IS GOING TO BE THE SQLITE COMMAND, ALREADY ADDED THE FIRST DATAPOINT
+        cursor.execute(getString) # SELECTS ALL OF THE DATA ACCORDING TO THE PARAMETERS GIVEN ABOVE
+        data = cursor.fetchall() # FETCHES ALL OF THE DATA
 
         if log == True: # IF THE RESULTS SHULD BE LOGGED
-            logging.info(f"     Databace command (read): {getString}{valueList}") # LOGS THE DATA
+            logging.info(f"     Readed data from databace, command: {getString}{valueList}") # LOGS THE DATA
             logging.debug(f"    data recived: {data}")
 
-        return data # RETURNS ALL OF THE DATA
+        return data
 
-    else: 
-      raise Exception(f"Parameter error when reading from DB, there has to be a value for eatch parameter. Parameters: {columnList}, Values: {valueList}") # IF THERE WAS A ERROR OF THE LENGHT OF THE DATA
+
+
+
+
+def getNameAndAdminCamera(cameraTable): 
+
+    rtnList = []
+    if cameraTable != False:
+        for row in cameraTable:
+            rtnList.append((row[2], row[4]))
+        return [rtnList, len(rtnList)] # returns the list and if admin can watch it: [('Trollfjrord', 1), ('Bælevåg', 0), ('Bodø', 1), ('Bodø', 0), ('Breivika', 0), ('Stavanger', 0)], only admin can view "Trollfjrord" and "Bodø"
+    
+    else:
+        return False
