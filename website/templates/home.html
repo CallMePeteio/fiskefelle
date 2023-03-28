@@ -153,6 +153,7 @@
           </button>
           <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
             <form method="post">
+              <input type="hidden" name="page_uuid" value="{{ page_uuid }}">
 
               {% if cameraName != False %} <!-- If the cameras shuld show -->
                 {% if cameraName[1] >= 1 %} <!-- If there is less than 2 items hide the dropdown-->
@@ -192,7 +193,7 @@
       </div>
     </div>
 
-    <!-- Misc Container -->
+    <!-- Misc Container 
     <div class="col-md-3 float-end">
       <div class="card">
         <div class="card-header">Misc</div>
@@ -207,7 +208,7 @@
         </div>
       </div>
     </div>
-  </div>
+  </div> -->
   
 
   <!--

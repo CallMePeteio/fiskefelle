@@ -9,9 +9,17 @@ from .models import User
 from .models import Log
 from . import pathToDB
 from . import logging 
+from . import Relay
 from . import db
 import sqlite3
 import json
+import uuid
+
+global page_cam_ips
+page_cam_ips = {}
+
+relay = Relay()
+
 
 views = Blueprint('views', __name__)
 
@@ -20,42 +28,53 @@ def logAction(userId, openDoor, turnLights):
     log = Log(userId=userId, openDoor=openDoor, turnLights=turnLights)
     db.session.add(log)
     db.session.commit()
+def getDefaultIp():
+
+    if session.get("isAdmin", False) == True : # IF THE USER IS ADMIN
+        camIp = selectFromDB(dbPath=pathToDB, table="camera", argumentList=["WHERE"], columnList=["adminView"], valueList="1")[0][3] # GETS A CAMERA AS THE DEFAULT IP, WITH ADMIN VIEW
+
+    if session.get("isAdmin", False) == False or camIp == None: # IF THERE IS NO CAMERAS SET TO ADMIN VIEW OR THE USER IS NOT ADMIN
+        camIp = selectFromDB(dbPath=pathToDB, table="camera")[0][3] # GETS THE CAMERA IP WITH THAT CAN BE VIEWD BY NOT ADMINS
+
+    return camIp
+
 
 
 @views.route('/', methods=['GET', 'POST'])
 @login_required
 def home():
 
+    page_uuid = request.form.get('page_uuid', request.args.get('page_uuid', str(uuid.uuid4()))) # GETS THE UNIQUE UUID CODE FROM A PREVIOUS REQUEST, IF THE CODE HASNT BEEN MADE BEFORE THAN MAKE A NEW 
+    camIp = page_cam_ips.get(page_uuid) # GETS THE IP ADRESS OF THE CAMERA FROM THE UNIQUE UUID IF IT IS THE FIRST TIME MAKING A UUID REQEST THEN THIS RETURNS NONE
+
+    if camIp == None: # IF THE "page_cam_ips.get(page_uuid)" RETURNS NONE
+        camIp = getDefaultIp() # GET A DEFAULT IP (FIRST TIME OPENING THE PAGE)
+
     if request.method == "POST": 
         if request.form.get("gate") == "open":
             logging.info("   Open the gates!")
             logAction(current_user.id, True, False)
+            relay.switchRelay("relay1")
 
         elif request.form.get("gate") == "close":
             logging.info("   Close the gates!")
             logAction(current_user.id, False, False)
+            relay.switchRelay("offAll")
 
 
         elif request.form.get("camera"):
-            logging.info(f"     Showing camera with id: {id}")
-
             camId = request.form.get("camera")
             camRow = selectFromDB(dbPath=pathToDB, table="camera", argumentList=["WHERE"], columnList=["id"], valueList=camId)
-            session["currentVidIp"] = camRow[0][3]
+            camIp = camRow[0][3]
+            page_cam_ips[page_uuid] = camIp
+            logging.info(f"     Showing camera with id: {camRow[0][0]}")
 
 
-        """
-        NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE
-        
-        BECAUSE WHAT IS SELECTED IS SAVED IN session["currentVidIp"] THEN THIS VARAIBLE WILL UPDATE AND THE THINGS WILL GET FUCKED, NEED TO MAKE EATCH SESSION INDEPENDENT
-
-        NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE
-        """
-
-
-    logging.warning(session.get("currentViewId", False))
+    
+    logging.warning(camIp)
     print(getNameAndAdminCamera(session.get("cameraTable", False)))
-    return render_template("home.html", user=current_user, isAdmin=session.get("isAdmin", False), cameraName=getNameAndAdminCamera(session.get("cameraTable", False)), cameraData=session.get("cameraTable", False), camIp=session.get("currentVidIp", False))
+    return render_template("home.html", user=current_user, isAdmin=session.get("isAdmin", False), cameraName=getNameAndAdminCamera(session.get("cameraTable", False)), cameraData=session.get("cameraTable", False), camIp=camIp, page_uuid=page_uuid)
+
 
 
 
@@ -75,15 +94,15 @@ def checkEmailAndPassword(email, password):
     return False
 def checkNameAndIp(name, ip): 
 
-    # NOTE WHEN CHECKING THE IP ADRESS OF A CAMERA I NEED TO CHECK IF THEY ENTERED A PORT
-
-
 #    ipList = ip.split(".") # RETURNS A LIST: ["10", "0", "0", "45:8000"]
 #    lastList = ip[len(ipList) -1].split(":") # SPLITS THE LAST ELEMENTS: ["45", "8000"]
 #    ip = ipList[:len(ipList) -1] # REMOVES THE LAST ELEMENT, FROM THE LIST ("45:8000")
 #    ip.extend([lastList[0]]) # EXTENDS THE IP LIST WITH THE LAST LIST ["10", "0", "0", "45"]
 #    #port = lastList[1]
 #    isGood = all(len(ip_) in (1,2,3) for ip_ in ip) # CHECKS IF THE LENGTH OF ANY OF THE INTEGERS IS SMALLER THAN 1 OR GREATER THAT 
+# NOTE WHEN CHECKING THE IP ADRESS OF A CAMERA I NEED TO CHECK IF THEY ENTERED A PORT
+
+
 
     ipNum = ip.replace(".", "")
     ipNum = ipNum.replace(":", "")

@@ -3,10 +3,14 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask import Flask
-from os import path
+
 
 import sqlite3
 import logging
+import smbus
+import sys
+import os
+
 
 
 db = SQLAlchemy()
@@ -68,6 +72,20 @@ def create_app():
 
 
 
+
+
+
+class Relay(): 
+    def __init__(self):
+
+
+        self.bus = smbus.SMBus(1) 
+
+        self.i2cAdress = 0x20 # SETS THE ADRESS OF THE RELAY BOARD
+        self.relayDict = {"relay1": 0xFE, "relay2": 0xFD, "relay3": 0xFB, "relay4": 0xF7, "relay5": 0xEF, "relay6": 0xDF, "offAll": 0xFF, "onAll": 0x00} # MAKES A DICTIONARY, FOR TURNING ON AND OFF THE RELAY
+
+    def switchRelay(self, command): 
+        self.bus.write_byte(self.i2cAdress, self.relayDict[command])
 
 
 """
