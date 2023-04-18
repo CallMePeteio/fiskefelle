@@ -2,7 +2,11 @@
 
 ## Setup & Installation
 
-Make sure you have the latest version of Python installed.
+Make sure you have the latest version of Python installed. 
+Remember to enable i2c comminication through raspi-config
+```bash
+pip install flask && pip install flask_sqlalchemy && pip install flask_login && pip install smbus
+```
 
 ```bash
 git clone <repo-url>
@@ -18,6 +22,3 @@ pip install -r requirements.txt
 python main.py
 ```
 
-## Viewing The App
-
-Go to `http://127.0.0.1:5000`
