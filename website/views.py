@@ -29,13 +29,19 @@ def logAction(userId, openDoor, turnLights):
     db.session.add(log)
     db.session.commit()
 def getDefaultIp():
-
+    camIp = None
     if session.get("isAdmin", False) == True : # IF THE USER IS ADMIN
-        camIp = selectFromDB(dbPath=pathToDB, table="camera", argumentList=["WHERE"], columnList=["adminView"], valueList="1")[0][3] # GETS A CAMERA AS THE DEFAULT IP, WITH ADMIN VIEW
+        camIp = selectFromDB(dbPath=pathToDB, table="camera", argumentList=["WHERE"], columnList=["adminView"], valueList="1") # GETS A CAMERA AS THE DEFAULT IP, WITH ADMIN VIEW
 
-    if session.get("isAdmin", False) == False or camIp == None: # IF THERE IS NO CAMERAS SET TO ADMIN VIEW OR THE USER IS NOT ADMIN
-        camIp = selectFromDB(dbPath=pathToDB, table="camera")[0][3] # GETS THE CAMERA IP WITH THAT CAN BE VIEWD BY NOT ADMINS
+    if camIp == None: # IF THERE IS NO CAMERAS SET TO ADMIN VIEW OR THE USER IS NOT ADMIN
+        camIp = selectFromDB(dbPath=pathToDB, table="camera") # GETS THE CAMERA IP WITH THAT CAN BE VIEWD BY NOT ADMIN
 
+    if camIp != None: 
+        camIp = camIp[0][3]
+
+    #####
+    ### ADD SO IT SAYS THAT YOU NEED TO ADD A CAMERA
+    
     return camIp
 
 
@@ -164,11 +170,11 @@ def settings():
             ipAdress = request.form.get('camIpAdress') # GETS THE IP OF THE CAMERA INPUTTED
             adminView = 'newCamCheckbox' in request.form # GETS IF THE CHECKBOX HAS BEEN CHECKED
             
-            if checkNameAndIp(name, ipAdress) == True: # CHECKS IF THE INPUT IS VALID
-                camera = Camera(userId=current_user.id, name=name, ipAdress=ipAdress, adminView=adminView) # MAKES THE OBJECT WITH ALL OF THE DATA INPUTED
-                db.session.add(camera) # ADDS THE OBJECT TO THE SESSION, FOR ADDING TO THE DB
-                db.session.commit() # COMMITS TO THE ACTION
-                setCameraCache() # UPDATES THE CACHE
+            #if checkNameAndIp(name, ipAdress) == True: # CHECKS IF THE INPUT IS VALID
+            camera = Camera(userId=current_user.id, name=name, ipAdress=ipAdress, adminView=adminView) # MAKES THE OBJECT WITH ALL OF THE DATA INPUTED
+            db.session.add(camera) # ADDS THE OBJECT TO THE SESSION, FOR ADDING TO THE DB
+            db.session.commit() # COMMITS TO THE ACTION
+            setCameraCache() # UPDATES THE CACHE
 
 
 # --- DELETE CAMERA HANDELING

@@ -15,7 +15,7 @@ import os
 
 db = SQLAlchemy()
 DB_NAME = "database.db"
-pathToDataStorage = "/home/pi/Flask-Web-App-Tutorial/instance/"
+pathToDataStorage = "/home/pi/fiskefelle/instance/"
 pathToDB = pathToDataStorage + DB_NAME
 
 
@@ -124,6 +124,10 @@ argument = This is the argument you want to do, forexample could you add AND.
 """
 
 def selectFromDB(dbPath, table, argumentList=None, columnList=None, valueList=None, log=True):
+    def checkIfEmpty(data): 
+        if data == []:
+            return None
+        return data
       
     con = sqlite3.connect(dbPath) # CONNECTS TO THE DB
     cursor = con.cursor() # MAKES THE CURSOR, FOR SELECTING THE DATA
@@ -144,7 +148,7 @@ def selectFromDB(dbPath, table, argumentList=None, columnList=None, valueList=No
                     logging.info(f"     Readed data from databace, command: {getString}{valueList}") # LOGS THE DATA
                     logging.debug(f"    data recived: {data}")
 
-                return data # RETURNS ALL OF THE DATA
+                return checkIfEmpty(data) # RETURNS ALL OF THE DATA
 
 
             cursor.execute(getString, (valueList[0],)) # SELECTS ALL OF THE GPS DATA, WE DO THIS TWICE BECAUSE THE SYNTAX OF THIS SUCS ;(, I NEED TI HAVE TRHE COMMA THERE WHAT A SHIT LIBARY
@@ -154,7 +158,7 @@ def selectFromDB(dbPath, table, argumentList=None, columnList=None, valueList=No
                 logging.info(f"     Databace command (read): {getString}{valueList}") # LOGS THE DATA
                 logging.debug(f"    data recived: {data}")
 
-            return data # RETURNS ALL OF THE DATA
+            return checkIfEmpty(data) # RETURNS ALL OF THE DATA
 
         else: 
           raise Exception(f"Parameter error when reading from DB, there has to be a value for eatch parameter. Parameters: {columnList}, Values: {valueList}") # IF THERE WAS A ERROR OF THE LENGHT OF THE DATA
@@ -167,7 +171,7 @@ def selectFromDB(dbPath, table, argumentList=None, columnList=None, valueList=No
             logging.info(f"     Readed data from databace, command: {getString}{valueList}") # LOGS THE DATA
             logging.debug(f"    data recived: {data}")
 
-        return data
+        return checkIfEmpty(data)
 
 
 
