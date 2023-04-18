@@ -105,9 +105,9 @@
 }
 
 .dropdown {
-  position: absolute;
-  top: 10px;
-  right: 40px;
+  /*position: absolute;
+  top: 0px;*/
+  right: 0px;
 }
 
 .dropdown-toggle {
@@ -124,10 +124,7 @@
   color: #3B444B;
 }
 
-.dropdown-menu {
-  border-color: #3B444B;
-  border-width: 2px;
-}
+
 
 .dropdown-item {
   background-color: #f7f7f7;
@@ -141,6 +138,26 @@
   border-color: #D22B2B;
   color: #3B444B;
 }
+.margin-right {
+        margin-right: 10px;
+    }
+
+.dropdown-menu {
+    border-color: #3B444B;
+    border-width: 2px;
+    left: auto; /* Add this line */
+    right: 0; /* Add this line */
+    transform: translateX(100%); /* Add this line */
+  }
+
+  /* Custom CSS for the spacing between dropdowns */
+  .dropdown + .dropdown {
+    margin-top: 10px;
+  }
+  .card-body-dropdowns {
+    display: flex;
+    justify-content: center;
+  }
 
 
 </style>
@@ -154,32 +171,6 @@
 
         <div class="embed-responsive embed-responsive-16by9">
           <iframe class="embed-responsive-item" src="{{ camIp }}" allowfullscreen></iframe>
-        </div>
-
-        <div class="dropdown">
-          <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            Select a Camera
-          </button>
-          <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-            <form method="post">
-              <input type="hidden" name="page_uuid" value="{{ page_uuid }}">
-
-              {% if cameraName != False %} <!-- If the cameras shuld show -->
-                {% if cameraName[1] >= 1 %} <!-- If there is less than 2 items hide the dropdown-->
-                  {% for camera in cameraData %} <!-- Loops over all of the camera rows that is cashed-->
-                  
-                    {% if camera[4] == 1 %} <!-- if the picture is only supposed to be shown to the admin -->
-                      {% if isAdmin == True %} <!-- if the admin is logged in -->
-                        <button type="submit" class="dropdown-item" name="camera" value={{ camera[0] }} id={{ camera[0] }}>{{ camera[2] }}</button>
-                      {% endif %}
-                    {% else %}
-                      <button type="submit" class="dropdown-item" name="camera" value={{ camera[0] }} id={{ camera[0] }}>{{ camera[2] }}</button>
-
-                    {% endif %}
-                  {% endfor %}
-                {% endif %}
-              {% endif %}
-          </div>
         </div>
       </div>
     </div>  
@@ -199,7 +190,6 @@
 
         </div>
         <div class="card-body"> 
-          
           <div class="list-group">
             <form method="post">
               <button class="btn btn-primary button" name="gate" value="open">Åpne port</button>
@@ -209,6 +199,61 @@
         </div>
       </div>
     </div>
+
+      <!-- Camera/fiskefelle Container -->
+
+<!-- Camera/fiskefelle Container -->
+      <div class="col-md-3 float-end">
+        <div style="padding-top: 10px;"></div>
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">Camera and Fiskefelle</div>
+          <div class="card-body card-body-dropdowns"> <!-- Add the new class here -->
+            <div class="list-group">
+              <div class="dropdown margin-right">
+                        <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="font-size: larger;">
+                             Select Fiskefelle
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton1">
+                            <form method="post">
+                                <input type="hidden" name="page_uuid" value="{{ page_uuid }}">
+                                {% if fiskefelleData != False and fiskefelleData != None %}
+                                        {% for fiskefelle in fiskefelleData %}
+                                            {% if fiskefelle[3] == 1 %}
+                                              {% if isAdmin == True %}
+                                                <button type="submit" class="dropdown-item" name="fiskefelleId" value={{ fiskefelle[0] }} id={{ fiskefelle[0] }}>{{ fiskefelle[2] }}</button>
+                                              {% endif %}
+                                            {% else %}
+                                              <button type="submit" class="dropdown-item" name="fiskefelleId" value={{ fiskefelle[0] }} id={{ fiskefelle[0] }}>{{ fiskefelle[2] }}</button>
+                                          {% endif %}
+                                        {% endfor %}
+                                {% endif %}
+                            </form>
+                        </div>
+                    </div>
+                  
+                    <div class="dropdown">
+                        <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="font-size: larger;">
+                            Select a Camera
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton2">
+                            <form method="post">
+                                <input type="hidden" name="page_uuid" value="{{ page_uuid }}">
+                                {% if cameraName != False and cameraName != None %}
+                                    {% if cameraName[1] >= 1 %}
+                                        {% for camera in cameraData %}
+                                            <button type="submit" class="dropdown-item" name="camera" value={{ camera[0] }} id={{ camera[0] }}>{{ camera[3] }}</button>
+                                        {% endfor %}
+                                    {% endif %}
+                                {% endif %}
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
 
     <!-- Misc Container 
     <div class="col-md-3 float-end">

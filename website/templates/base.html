@@ -35,33 +35,6 @@
         <ul class="navbar-nav">
 
         
-        <!-- Camera Dropdown 
-        {% if cameraName != False %} <!-- If the camername shuld show 
-            {% if cameraName[1] >= 1 %} <!-- If there is less than 2 items hide the dropdown
-              <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#" id="cameraDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                  Cameras
-                </a>
-                <div class="dropdown-menu" aria-labelledby="cameraDropdown">
-                  {% for camera in cameraName[0] %} <!-- Loops over all of the camera rows that is cashed
-                    {% set cameraUrl = "/" + camera[0] %} <!-- sets the camera url (for redirecting)
-
-                    {% if camera[1] == 1 %} <!-- if the picture is only supposed to be shown to the admin 
-                      {% if isAdmin == True %} <!-- if the admin is logged in 
-                        <a class="dropdown-item" href={{ cameraUrl }}>{{ camera[0] }}</a>
-                      {% endif %}
-
-                    {% else %}
-                      <a class="dropdown-item" href={{ cameraUrl }}>{{ camera[0] }}</a>
-                    {% endif %}
-
-
-                  {% endfor %}
-                </div>
-              </li>
-            {% endif %}
-          {% endif %}
-        Logout Box -->
           <li class="nav-item">
             <a class="nav-link" href="/logout">Logout</a>
           </li>

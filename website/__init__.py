@@ -180,7 +180,7 @@ def selectFromDB(dbPath, table, argumentList=None, columnList=None, valueList=No
 def getNameAndAdminCamera(cameraTable): 
 
     rtnList = []
-    if cameraTable != False:
+    if cameraTable != False and cameraTable != None:
         for row in cameraTable:
             rtnList.append((row[2], row[4]))
         return [rtnList, len(rtnList)] # returns the list and if admin can watch it: [('Trollfjrord', 1), ('Bælevåg', 0), ('Bodø', 1), ('Bodø', 0), ('Breivika', 0), ('Stavanger', 0)], only admin can view "Trollfjrord" and "Bodø"

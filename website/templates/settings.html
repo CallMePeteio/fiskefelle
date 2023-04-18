@@ -5,14 +5,13 @@
 
         <!-- Create user -->
         <div class="row justify-content-left pt-4 flex-row">
-            <div class="col-md-6">
+            <div class="col-md-6"> <!-- Updated column class -->
               <div class="card mb-3">
                 <div class="card-header">
                   <h4>Create New User</h4>
                 </div>
                 <div class="card-body">
                   <form method="post">
-
                     <div class="form-group">
                       <label for="username">Username:</label>
                       <input type="email" class="form-control" id="email" name="email" placeholder="Enter email"/>
@@ -34,14 +33,92 @@
                           <label class="form-check-label" for="checkbox">Make Admin</label>
                         </div>
                       </div>
-
                     </div>
                   </form>
                 </div>
               </div>
             </div>
-          </div>
+        </div>
+          
         <div class="pt-4"></div>
+        <!-- CREATE NEW FISKEFELLE -->
+        <div class="row justify-content-left pt-4 flex-row">
+           <div class="col-md-6"> <!-- Updated column class -->
+             <div class="card mb-3">
+               <div class="card-header">
+                 <h4>Create New Fiskefelle</h4>
+               </div>
+               <div class="card-body">
+                <form method="post">
+                    <div class="form-group">
+                      <label for="username">Name:</label>
+                      <input type="text" class="form-control" id="nameFiskefelle" name="nameFiskefelle" placeholder="Enter the name of the Fiskefelle"/>
+                    </div>
+
+                    <div class="row">
+                      <div class="col-md-6">
+                        <input type="submit" class="btn btn-primary" name="createFiskefelle" value="Create Fiskefelle">
+                      </div>
+
+                      <div class="col-md-6 text-right">
+                        <div class="form-group form-check-inline">
+                          <input type="checkbox" class="form-check-input" id="newFiskefelleCheckbox" name="newFiskefelleCheckbox">
+                          <label class="form-check-label" for="checkbox">Must be admin</label>
+                        </div>
+                      </div>
+                    </div>
+                  </form>
+               </div>
+             </div>
+           </div>
+            <!-- Delete Fiskefeller -->
+                <div class="col-md-6">
+                  <div class="card">
+                      <div class="card-header">
+                          <h4>Delete Fiskefelle</h4>
+                      </div>
+                      <div class="card-body">
+                          <table class="table">
+                              <thead>
+                                  <tr>
+                                      <th>Name</th>
+                                      <th>Camera Amount</th>
+                                      <th>Admin View</th>
+                                      <th>Delete</th>
+                                  </tr>
+                              </thead>
+                              <tbody>
+                                {% if fiskefelleData != None and fiskefelleData != None %} <!-- IF IT IS THE FIRST TIME RENDERING THE SETTINGS (NO CAMERA DATA )-->
+                                    {% for fiskefelle in fiskefelleData %} <!-- LOOPS OVER ALL OF THE DATA -->
+                                    <tr>
+                                      <td>{{ fiskefelle[2] }}</td>
+                                      <td>5</td>
+                                      {% if fiskefelle[3] == 0 %}
+                                        <td>False</td>
+                                      {% elif fiskefelle[3] == 1 %}
+                                        <td>True</td>
+                                      {% endif %}
+                                      <td>
+                                        <form method="post">
+                                          <input type="hidden" name="deleteFiskefelleId" value="{{ fiskefelle[0] }}">
+                                          <button type="submit" class="btn btn-secondary" name="deleteCamBtn">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                                              <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                                              <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                                            </svg>
+                                          </button>
+                                        </form>
+                                      </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% endif %}
+                              </tbody>
+                          </table>
+                      </div>
+                  </div>
+                </div>
+            </div>
+
 
         <!-- User logins --
         <div class="row mt-3">
@@ -122,36 +199,52 @@
         
         <!-- Add new camera -->
         <div class="row justify-content-left pt-4 flex-row">
-          <div class="col-md-6">
-              <div class="card mb-3">
-                  <div class="card-header">
-                      <h4>Add New Camera</h4>
-                  </div>
-                  <div class="card-body">
-                      <form method="post">
-                          <div class="form-group">
-                              <label for="password">Name</label>
-                              <input type="text" class="form-control" id="camName" name="camName" placeholder="Enter the name of the camera"/>
-                          </div>
-                          <div class="form-group">
-                              <label for="username">Link</label>
-                              <input type="text" class="form-control" id="camIpAdress" name="camIpAdress" placeholder="Enter the link to the camera video"/>
-                          </div>
-                          <div class="row">
-                              <div class="col-md-6">
-                                  <input type="submit" class="btn btn-primary" name="createCam" value="Add Camera">
-                              </div>
-                              <div class="col-md-6 text-right">
-                                  <div class="form-group form-check-inline">
-                                      <input type="checkbox" class="form-check-input" id="newCamCheckbox" name="newCamCheckbox">
-                                      <label class="form-check-label" for="checkbox">Must be admin</label>
-                                  </div>
-                              </div>
-                          </div>
-                      </form>
-                  </div>
-              </div>
-          </div>
+            <div class="col-md-6">
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h4>Add New Camera</h4>
+                    </div>
+                    <div class="card-body">
+                        <form method="post">
+                            <div class="form-group">
+
+                            <!-- DROPDOWN -->
+                                <label for="fiskefeller">Select Fiskefelle</label>
+                                <select class="form-control" id="cameraType" name="fiskefelleType">
+                                    {% if fiskefelleData != None and fiskefelleData != False %} <!-- IF THERE IS ANY FISKEFELLE DATA AVALIBLE -->
+                                        {% for fiskefelle in fiskefelleData %} <!-- LOOPS OVER ALL OF THE DATA -->
+                                            <option value="{{ fiskefelle[0] }}">{{ fiskefelle[2] }}</option>
+                                        {% endfor %}
+                                    {% else %} <!-- THE USER NEEDS TO ADD FISKEFELLE -->
+                                        <option value="None">Create a new fiskefelle first!</option>
+                                    {% endif %}
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="password">Name</label>
+                                <input type="text" class="form-control" id="camName" name="camName" placeholder="Enter the name of the camera"/>
+                            </div>
+                            <div class="form-group">
+                                <label for="username">Link</label>
+                                <input type="text" class="form-control" id="camIpAdress" name="camIpAdress" placeholder="Enter the link to the camera video"/>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <input type="submit" class="btn btn-primary" name="createCam" value="Add Camera">
+                                </div>
+                                <!--<div class="col-md-6 text-right">
+                                    <div class="form-group form-check-inline">
+                                        <input type="checkbox" class="form-check-input" id="newCamCheckbox" name="newCamCheckbox">
+                                        <label class="form-check-label" for="checkbox">Must be admin</label>
+                                    </div>
+                                </div>-->
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        
 
           <!-- Delete camera -->
           <div class="col-md-6">
@@ -163,35 +256,33 @@
                       <table class="table">
                           <thead>
                               <tr>
+                                  <th>Fiskefelle</th>
                                   <th>Name</th>
                                   <th>Link</th>
-                                  <th>Admin View</th>
                                   <th>Delete</th>
                               </tr>
                           </thead>
                           <tbody>
-                            {% for camera in cameraData %}
-                            <tr>
-                              <td>{{ camera[2] }}</td>
-                              <td style="font-size: 10px;">{{ camera[3] }}</td>
-                              {% if camera[4] == 0 %}
-                                <td>False</td>
-                              {% elif camera[4] == 1 %}
-                                <td>True</td>
-                              {% endif %}
-                              <td>
-                                <form method="post">
-                                  <input type="hidden" name="deleteCamId" value="{{ camera[0] }}">
-                                  <button type="submit" class="btn btn-secondary" name="deleteCamBtn">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
-                                      <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
-                                      <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
-                                    </svg>
-                                  </button>
-                                </form>
-                              </td>
-                            </tr>
-                            {% endfor %}
+                            {% if cameraData != None %} <!-- IF IT IS THE FIRST TIME RENDERING THE SETTINGS (NO CAMERA DATA )-->
+                                {% for camera in cameraData %} <!-- LOOPS OVER ALL OF THE DATA -->
+                                <tr>
+                                  <td>{{fiskefelleIdToName[camera[2]]}}</td> <!-- FISKEFELLE NAME -->
+                                  <td>{{ camera[3] }}</td> <!-- CAMERA NAME -->
+                                  <td class="text-break" style="font-size: 12px;">{{ camera[4] }}</td> <!-- CAMERA LINK -->
+                                  <td>
+                                    <form method="post">
+                                      <input type="hidden" name="deleteCamId" value="{{ camera[0] }}">
+                                      <button type="submit" class="btn btn-secondary" name="deleteCamBtn">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                                          <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                                          <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                                        </svg>
+                                      </button>
+                                    </form>
+                                  </td>
+                                </tr>
+                                {% endfor %}
+                            {% endif %}
                           </tbody>
                       </table>
                   </div>

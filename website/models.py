@@ -12,16 +12,21 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(150))
     admin = db.Column(db.Boolean)
 
+class FiskeFelle(db.Model):
+    __tablename__ = 'fiskefelle'
+    id = db.Column(db.Integer, primary_key=True)
+    userId = db.Column(db.Integer, db.ForeignKey('user.id'))
+    name = db.Column(db.String(150))
+    adminView = db.Column(db.Boolean)
 
 
 class Camera(db.Model): 
     __tablename__ = 'camera'
     id = db.Column(db.Integer, primary_key=True)
     userId = db.Column(db.Integer, db.ForeignKey('user.id'))
+    fiskeFelleId = db.Column(db.Integer, db.ForeignKey('fiskefelle.id'))
     name = db.Column(db.String(150))
     ipAdress = db.Column(db.String(150))
-    adminView = db.Column(db.Boolean)
-
 
 
 class Log(db.Model): 

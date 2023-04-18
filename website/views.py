@@ -4,6 +4,7 @@ from werkzeug.security import generate_password_hash
 
 from . import getNameAndAdminCamera
 from . import selectFromDB
+from .models import FiskeFelle
 from .models import Camera
 from .models import User
 from .models import Log
@@ -28,16 +29,25 @@ def logAction(userId, openDoor, turnLights):
     log = Log(userId=userId, openDoor=openDoor, turnLights=turnLights)
     db.session.add(log)
     db.session.commit()
-def getDefaultIp():
-    camIp = None
-    if session.get("isAdmin", False) == True : # IF THE USER IS ADMIN
-        camIp = selectFromDB(dbPath=pathToDB, table="camera", argumentList=["WHERE"], columnList=["adminView"], valueList="1") # GETS A CAMERA AS THE DEFAULT IP, WITH ADMIN VIEW
 
-    if camIp == None: # IF THERE IS NO CAMERAS SET TO ADMIN VIEW OR THE USER IS NOT ADMIN
-        camIp = selectFromDB(dbPath=pathToDB, table="camera") # GETS THE CAMERA IP WITH THAT CAN BE VIEWD BY NOT ADMIN
+def getDefaultFiskefelle(): 
+    
+    if session.get("isAdmin", False) == True: 
+        defaultFiskefelle = selectFromDB(dbPath=pathToDB, table="fiskefelle")
+    else: 
+        defaultFiskefelle = selectFromDB(dbPath=pathToDB, table="fiskefelle", argumentList=["WHERE"], columnList=["adminView"], valueList=1)
+    
+    if defaultFiskefelle != None:
+        return defaultFiskefelle[0]
+    return None
+
+
+def getDefaultIp(fiskefelleId):
+    camIp = None
+    camIp = selectFromDB(dbPath=pathToDB, table="camera", argumentList=["WHERE"], columnList=["fiskeFelleId"], valueList=str(fiskefelleId)) # GETS THE CAMERA IP 
 
     if camIp != None: 
-        camIp = camIp[0][3]
+        camIp = camIp[0][4]
 
     #####
     ### ADD SO IT SAYS THAT YOU NEED TO ADD A CAMERA
@@ -54,7 +64,8 @@ def home():
     camIp = page_cam_ips.get(page_uuid) # GETS THE IP ADRESS OF THE CAMERA FROM THE UNIQUE UUID IF IT IS THE FIRST TIME MAKING A UUID REQEST THEN THIS RETURNS NONE
 
     if camIp == None: # IF THE "page_cam_ips.get(page_uuid)" RETURNS NONE
-        camIp = getDefaultIp() # GET A DEFAULT IP (FIRST TIME OPENING THE PAGE)
+        defualtFiskefelle = getDefaultFiskefelle()
+        camIp = getDefaultIp(defualtFiskefelle[0]) # GET A DEFAULT IP (FIRST TIME OPENING THE PAGE)
 
     if request.method == "POST": 
         if request.form.get("gate") == "open":
@@ -67,11 +78,21 @@ def home():
             logAction(current_user.id, False, False)
             relay.switchRelay("offAll")
 
+        elif request.form.get("fiskefelleId"): 
+            selectedFiskefelle = request.form.get("fiskefelleId")
+            camRow = selectFromDB(dbPath=pathToDB, table="fiskefelle", argumentList=["WHERE"], columnList=["id"], valueList=camId)
 
+            
+
+
+
+
+
+# --- SELECT CAMERA HANDELING
         elif request.form.get("camera"):
             camId = request.form.get("camera")
             camRow = selectFromDB(dbPath=pathToDB, table="camera", argumentList=["WHERE"], columnList=["id"], valueList=camId)
-            camIp = camRow[0][3]
+            camIp = camRow[0][4]
             page_cam_ips[page_uuid] = camIp
             logging.info(f"     Showing camera with id: {camRow[0][0]}")
 
@@ -79,13 +100,27 @@ def home():
     
     logging.warning(camIp)
     print(getNameAndAdminCamera(session.get("cameraTable", False)))
-    return render_template("home.html", user=current_user, isAdmin=session.get("isAdmin", False), cameraName=getNameAndAdminCamera(session.get("cameraTable", False)), cameraData=session.get("cameraTable", False), camIp=camIp, page_uuid=page_uuid)
+    return render_template("home.html", user=current_user, isAdmin=session.get("isAdmin", False), cameraName=getNameAndAdminCamera(session.get("cameraTable", False)), cameraData=session.get("cameraTable", False), camIp=camIp, page_uuid=page_uuid, fiskefelleData=session.get("fiskefelleTable", False))
 
 
 
 
 
+def checkFiskefelleName(name): 
+    fiskefeller = FiskeFelle.query.filter_by(name=name).first()
 
+    if fiskefeller:
+        flash('Name already exists', category='error')
+    elif name.find(" ") != -1: # IF THE NAME CONTAINS ANY SPACES
+        flash('Name cant contain spaces', category='error') 
+    elif len(name) <= 3: 
+        flash("Name must contain more than 3 characters", category='error')
+    elif len(name) > 150: # IF THE NAME IS TO LONG
+        flash('Max charachter lenght is 150 characters', category='error')
+    else: 
+        flash("Created new fiskefelle")
+        return True # RETURNS TRUE IF THE NAME FORFILLS ALL OF THE REQUIRMENTS
+    return False # RETURNS FALSE OF THE NAME DOSENT FORFILL ALL OF THE REQUIRMENTS
 def checkEmailAndPassword(email, password): 
     user = User.query.filter_by(email=email).first()
     if user:
@@ -98,7 +133,7 @@ def checkEmailAndPassword(email, password):
         flash("Sucsessfully made a new user!")
         return True
     return False
-def checkNameAndIp(name, ip): 
+def checkNameIpId(name, ip, fiskefelleId): 
 
 #    ipList = ip.split(".") # RETURNS A LIST: ["10", "0", "0", "45:8000"]
 #    lastList = ip[len(ipList) -1].split(":") # SPLITS THE LAST ELEMENTS: ["45", "8000"]
@@ -117,9 +152,11 @@ def checkNameAndIp(name, ip):
         flash("Name cant be greater than 130 charachters", category='error')
     elif ip.count(".") < 3: 
         flash(f"Invalid ip adress entered: {ip}", category='error')
-        return False 
-    elif ip.find(":") == -1: 
-        flash("You also need to enter the port on the ip adress, example: 10.0.0.45:8000", category='error')
+    elif fiskefelleId == "None":
+        flash(f"You need to make fiskefelle before you make camera!", category='error')
+
+    #elif ip.find(":") == -1: 
+    #    flash("You also need to enter the port on the ip adress, example: 10.0.0.45:8000", category='error')
 
     #elif isGood == True:
     #    flash(f"The ip adress integers cant contain more than three charachters: {ip}", category='error')
@@ -127,8 +164,8 @@ def checkNameAndIp(name, ip):
     #elif len(port) >= 4:
     #    flash(f"Error with the length of the port: {port}", category='error')
 
-    if ipNum.isdigit() == False: 
-        flash(f"The ip adress cant contain letters, ip adress: {ip}", category='error')
+    #if ipNum.isdigit() == False: 
+    #    flash(f"The ip adress cant contain letters, ip adress: {ip}", category='error')
 
     else: 
         flash("Sucsessfully created a new camera!")
@@ -139,7 +176,12 @@ def setCameraCache():
         session['cameraTable'] = selectFromDB(pathToDB, "camera", log=False) # SETS THE CASHE VARIABLE TO ALL OF THE CAMERA ROWS FROM THE CAMERA TABLE
     else:
         session['cameraTable'] = selectFromDB(pathToDB, "camera", ["WHERE"], ["adminView"], [False], log=False) # DOES THE SAME AS ABOVE BUT IT DOES NOT ADD THE ROWS THAT IS ONLY FOR THE ADMIN TO VIEW
-                   
+def setFiskefelleCache(): 
+    if session.get("isAdmin", False) == True: # IF THE USER IS ADMIN 
+        session['fiskefelleTable'] = selectFromDB(pathToDB, "fiskefelle", log=False) # SETS THE CASHE VARIABLE TO ALL OF THE CAMERA ROWS FROM THE CAMERA TABLE
+    else:
+        session['fiskefelleTable'] = selectFromDB(pathToDB, "fiskefelle", ["WHERE"], ["adminView"], [False], log=False) # DOES THE SAME AS ABOVE BUT IT DOES NOT ADD THE ROWS THAT IS ONLY FOR THE ADMIN TO VIEW
+                 
 
 
     
@@ -169,29 +211,61 @@ def settings():
             name = request.form.get('camName') # GETS THE CAMERA NAME
             ipAdress = request.form.get('camIpAdress') # GETS THE IP OF THE CAMERA INPUTTED
             adminView = 'newCamCheckbox' in request.form # GETS IF THE CHECKBOX HAS BEEN CHECKED
+            fiskefelleId = request.form.get("fiskefelleType") # GETS THE ID OF THE FISKEFELLE THAT THE CAMERA SHULD BE TIED TO
             
-            #if checkNameAndIp(name, ipAdress) == True: # CHECKS IF THE INPUT IS VALID
-            camera = Camera(userId=current_user.id, name=name, ipAdress=ipAdress, adminView=adminView) # MAKES THE OBJECT WITH ALL OF THE DATA INPUTED
-            db.session.add(camera) # ADDS THE OBJECT TO THE SESSION, FOR ADDING TO THE DB
-            db.session.commit() # COMMITS TO THE ACTION
-            setCameraCache() # UPDATES THE CACHE
+            if checkNameIpId(name, ipAdress, fiskefelleId) == True: # CHECKS IF THE INPUT IS VALID
+                camera = Camera(userId=current_user.id, fiskeFelleId=fiskefelleId, name=name, ipAdress=ipAdress, adminView=adminView) # MAKES THE OBJECT WITH ALL OF THE DATA INPUTED
+                db.session.add(camera) # ADDS THE OBJECT TO THE SESSION, FOR ADDING TO THE DB
+                db.session.commit() # COMMITS TO THE ACTION
+                setCameraCache() # UPDATES THE CACHE
 
 
 # --- DELETE CAMERA HANDELING
         elif request.form.get("deleteCamId"): # IF SOMEONE PRESSED THE DELETE CAM BUTTON
-            id = request.form.get("deleteCamId") # GETS THE ID OF THE BUTTON (SAME ID AS IN THE DATABACE)
+            camId = request.form.get("deleteCamId") # GETS THE ID OF THE BUTTON (SAME ID AS IN THE DATABACE)
 
             con = sqlite3.connect(pathToDB) # CONNECTS TO THE DB
             cursor = con.cursor() # SETS THE CURSOR
-            cursor.execute("DELETE FROM 'camera' WHERE id=?", (id,)) # DELETES THE ROW THAT HAS BEEN PRESSED RELEASED ON
+            cursor.execute("DELETE FROM 'camera' WHERE id=?", (camId,)) # DELETES THE ROW THAT HAS BEEN PRESSED RELEASED ON
             con.commit() # COMMITS TO THE ACTION
+            con.close()
         
             setCameraCache() # UPDATES THE CACHE
             flash(f"Sucsessfully deleted the Camera!") # Flashes a message
+        
+# --- CREATE FISKEFELLE HANELING
+        elif request.form.get("createFiskefelle"):  # IF SOMEONE CLICKS THE "Create Fiskefelle" POST BUTTON
+            name = request.form.get("nameFiskefelle") # GETS THE NAME OF THE FISKEFELLE
+            adminView = 'newFiskefelleCheckbox' in request.form # GETS IF THE CHECKBOX HAS BEEN CHECKED
+
+            if checkFiskefelleName(name) == True:
+                fiskefelle = FiskeFelle(userId=current_user.id, name=name, adminView=adminView)
+                db.session.add(fiskefelle)
+                db.session.commit()
+                setFiskefelleCache() # UPDATES THE CACHE
+        
+        elif request.form.get("deleteFiskefelleId"):
+            fiskefelleId = request.form.get("deleteFiskefelleId")
+
+            con = sqlite3.connect(pathToDB) # CONNECTS TO THE DB
+            cursor = con.cursor() # SETS THE CURSOR
+            cursor.execute("DELETE FROM 'fiskefelle' WHERE id=?", (fiskefelleId,)) # DELETES THE ROW THAT HAS BEEN PRESSED RELEASED ON
+            cursor.execute("DELETE FROM 'camera' WHERE fiskeFelleid=?", (fiskefelleId,)) # DELEATS THE CAMERAS THAT HAS BEEN ATTATCHED TO THE FISKEFELLE
+            con.commit() # COMMITS TO THE ACTION
+            con.close()
+            setFiskefelleCache() # UPDATES THE CACHE
+            setCameraCache() # UPDATES THE CACHE
+            flash(f"Sucsessfully deleted the Fiskefelle!") # Flashes a message
 
 
 
 
+    print(session.get("cameraTable", False))
+    print(session.get("fiskefelleTable", False))
 
+    if session.get("fiskefelleTable", False) != None:
+        fiskefelleIdToName = {fiskefelle[0]: fiskefelle[2] for fiskefelle in session.get("fiskefelleTable", False)}
+    else: 
+        fiskefelleIdToName = None
 
-    return render_template("settings.html", user=current_user, isAdmin=session.get("isAdmin", False), cameraName=getNameAndAdminCamera(session.get("cameraTable", False)), cameraData=session.get("cameraTable", False))
+    return render_template("settings.html", user=current_user, isAdmin=session.get("isAdmin", False), cameraName=getNameAndAdminCamera(session.get("cameraTable", False)), cameraData=session.get("cameraTable", False), fiskefelleData=session.get("fiskefelleTable", False), fiskefelleIdToName=fiskefelleIdToName)
