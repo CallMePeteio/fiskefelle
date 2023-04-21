@@ -34,14 +34,20 @@ def login():
                 if isAdmin[0][len(isAdmin[0]) -1] == 1:
                     camTable = selectFromDB(pathToDB, "camera", ["WHERE"], log=False) # GETS ALL OF THE ROWS FROM THE "camera" TABLE
                     fiskefeleTable = selectFromDB(pathToDB, "fiskefelle", ["WHERE"], log=False) # GETS ALL OF THE ROWS FROM THE "camera" TABLE
+                    gateTable = selectFromDB(pathToDB, "gate", ["WHERE"], log=False)
                     session["isAdmin"] = True # SETS THE USER AS ADMIN
+                    session["gateTable"] = gateTable  # SETS THE RECIVE DATA TO A GLOBAL VARIABLE, IM USING THIS TO CASH THE TABLE "gateTable", SO I DONT HAFT TO READ FORM THE DB EVRYTIME I MAKE A REQUEST
                     session['cameraTable'] = camTable # SETS THE RECIVE DATA TO A GLOBAL VARIABLE, IM USING THIS TO CASH THE TABLE "cameras", SO I DONT HAFT TO READ FORM THE DB EVRYTIME I MAKE A REQUEST
                     session["fiskefelleTable"] = fiskefeleTable # SETS THE RECIVE DATA TO A GLOBAL VARIABLE, IM USING THIS TO CASH THE TABLE "fiskefelle", SO I DONT HAFT TO READ FORM THE DB EVRYTIME I MAKE A REQUEST
+    
 
                 else:
+                    gateTableNotAdmin = selectFromDB(pathToDB, "gate", ["WHERE"], log=False)
                     camTableNotAdmin = selectFromDB(pathToDB, "camera", ["WHERE"], ["adminView"], [False], log=True) # GETS THE CAM TABLE, THAT NONADMIN USERS CAN VIEW 
                     fiskefelleTableNotAdmin = selectFromDB(pathToDB, "fiskefelle", ["WHERE"], ["adminView"], [False], log=True) # GETS THE CAM TABLE, THAT NONADMIN USERS CAN VIEW 
+                    
                     session["isAdmin"] = False
+                    session["gateTable"] = gateTableNotAdmin  # SETS THE RECIVE DATA TO A GLOBAL VARIABLE, IM USING THIS TO CASH THE TABLE "gateTable", SO I DONT HAFT TO READ FORM THE DB EVRYTIME I MAKE A REQUEST
                     session['cameraTable'] = camTableNotAdmin # SETS THE RECIVE DATA TO A GLOBAL VARIABLE, IM USING THIS TO CASH THE TABLE "cameras", SO I DONT HAFT TO READ FORM THE DB EVRYTIME I MAKE A REQUEST
                     session["fiskefelleTable"] = fiskefelleTableNotAdmin # SETS THE RECIVE DATA TO A GLOBAL VARIABLE, IM USING THIS TO CASH THE TABLE "fiskefelle", SO I DONT HAFT TO READ FORM THE DB EVRYTIME I MAKE A REQUEST
 

@@ -168,7 +168,6 @@
     <div class="col-md-12" id="camera-container">
       <div class="iframe-wrapper">
         <!--<iframe src={{ camIp }} frameborder="0" allowfullscreen id="camera"></iframe>-->
-
         <div class="embed-responsive embed-responsive-16by9">
           <iframe class="embed-responsive-item" src="{{ camIp }}" allowfullscreen></iframe>
         </div>
@@ -177,28 +176,28 @@
 
 
     <!-- Port Container -->
-    <div class="col-md-3 float-end">
-      <div style="padding-top: 10px;"></div>
-      <div class="card">
+    {% if gateData != None and gateData != False %} <!-- IF THERE IS ANY GATE DATA -->
+      {% for gate in gateData %} <!-- LOOPS OVER ALL OF THE GATES -->
+        {% if gate[2] == fiskefelleId %} <!-- IF THE GATE IS CONNECTED TO THE SELECTED FISKEFELLE -->
+          <div class="col-md-3 float-end">  
+            <div style="padding-top: 10px;"></div>
+            <div class="card">
 
-        <div class="card-header d-flex justify-content-between align-items-center">Port 
-          <a href={{ camIp }}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-up-right-circle" viewBox="0 0 16 16">
-              <path fill-rule="evenodd" d="M1 8a7 7 0 1 0 14 0A7 7 0 0 0 1 8zm15 0A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.854 10.803a.5.5 0 1 1-.708-.707L9.243 6H6.475a.5.5 0 1 1 0-1h3.975a.5.5 0 0 1 .5.5v3.975a.5.5 0 1 1-1 0V6.707l-4.096 4.096z"/>
-            </svg>
-          </a>
+              <div class="card-header d-flex justify-content-between align-items-center">{{ gate[3] }}</div> <!-- THE NAME OF THE GATE -->
 
-        </div>
-        <div class="card-body"> 
-          <div class="list-group">
-            <form method="post">
-              <button class="btn btn-primary button" name="gate" value="open">Åpne port</button>
-              <button class="btn btn-danger button" name="gate" value="close">Lukk port</button>
-            </form>
+              <div class="card-body"> 
+                <div class="list-group">
+                  <form method="post">
+                    <button class="btn btn-primary button" name="open" value="{{ gate[4] }}">Åpne port</button> <!-- THIS HAS THE NAME OF OPEN/CLOSE AND THE VALUE IS THE RELAYCHANNEL-->
+                    <button class="btn btn-danger button" name="close" value="{{ gate[4] }}">Lukk port</button> <!-- THIS HAS THE NAME OF OPEN/CLOSE AND THE VALUE IS THE RELAYCHANNEL-->
+                  </form>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-    </div>
+        {% endif %}
+      {% endfor %}
+    {% endif %}
 
       <!-- Camera/fiskefelle Container -->
 
@@ -206,47 +205,69 @@
       <div class="col-md-3 float-end">
         <div style="padding-top: 10px;"></div>
         <div class="card">
-          <div class="card-header d-flex justify-content-between align-items-center">Camera and Fiskefelle</div>
+
+          <div class="card-header d-flex justify-content-between align-items-center">Camera and Fiskefelle
+          <!-- THIS IS THE BLUE ARROW, THAT POINTS TO THE CAMERA IP FOR FULL SCREEN-->
+            <a href={{ camIp }}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-up-right-circle" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M1 8a7 7 0 1 0 14 0A7 7 0 0 0 1 8zm15 0A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.854 10.803a.5.5 0 1 1-.708-.707L9.243 6H6.475a.5.5 0 1 1 0-1h3.975a.5.5 0 0 1 .5.5v3.975a.5.5 0 1 1-1 0V6.707l-4.096 4.096z"/>
+              </svg>
+            </a>
+          </div>
           <div class="card-body card-body-dropdowns"> <!-- Add the new class here -->
             <div class="list-group">
-              <div class="dropdown margin-right">
-                        <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="font-size: larger;">
-                             Select Fiskefelle
+
+
+                      <div class="dropdown">
+                        <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton3" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="font-size: larger;">
+                            {% set default_fiskefelle_label = "Select a Fiskefelle" %}
+                            {{ default_fiskefelle_label }}
                         </button>
-                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton1">
+                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton3">
                             <form method="post">
                                 <input type="hidden" name="page_uuid" value="{{ page_uuid }}">
-                                {% if fiskefelleData != False and fiskefelleData != None %}
-                                        {% for fiskefelle in fiskefelleData %}
-                                            {% if fiskefelle[3] == 1 %}
-                                              {% if isAdmin == True %}
-                                                <button type="submit" class="dropdown-item" name="fiskefelleId" value={{ fiskefelle[0] }} id={{ fiskefelle[0] }}>{{ fiskefelle[2] }}</button>
-                                              {% endif %}
-                                            {% else %}
-                                              <button type="submit" class="dropdown-item" name="fiskefelleId" value={{ fiskefelle[0] }} id={{ fiskefelle[0] }}>{{ fiskefelle[2] }}</button>
-                                          {% endif %}
-                                        {% endfor %}
+                                {% if fiskefelleData != False and fiskefelleData != None %} <!-- IF THERE IS ANY FISKEFELLE DATA-->
+                                    {% for fiskefelle in fiskefelleData %} <!-- LOOPS OVER ALL OF THE DIFFRENT FISKEFELLER-->
+                                        {% if fiskefelle[0] == fiskefelleId %} <!-- IF THE FISKEFELLE IS THE SELECTED FISKEFELLE -->
+                                            {% set default_fiskefelle_label = fiskefelle[2] %} <!-- UPDATES THE DEFAULT FISKEFELLE LABEL -->
+                                            <script>
+                                                document.getElementById("dropdownMenuButton3").innerHTML = "{{ default_fiskefelle_label }}"; // CHANGES THE TEXT SHOWN ON THE DROPDOWN
+                                            </script>
+                                        {% endif %} 
+                                        <button type="submit" class="dropdown-item" name="fiskefelleId" value={{ fiskefelle[0] }} id={{ fiskefelle[0] }}>{{ fiskefelle[2] }}</button> <!-- THIS IS THE DROPDOWN, NOTE THE ID OF THE DROPDOWN IS THE CORELATING FISKEFELLE ID-->
+                                    {% endfor %}
                                 {% endif %}
                             </form>
                         </div>
-                    </div>
+                      </div>
                   
-                    <div class="dropdown">
-                        <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="font-size: larger;">
-                            Select a Camera
-                        </button>
-                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton2">
-                            <form method="post">
-                                <input type="hidden" name="page_uuid" value="{{ page_uuid }}">
-                                {% if cameraName != False and cameraName != None %}
-                                    {% if cameraName[1] >= 1 %}
-                                        {% for camera in cameraData %}
-                                            <button type="submit" class="dropdown-item" name="camera" value={{ camera[0] }} id={{ camera[0] }}>{{ camera[3] }}</button>
-                                        {% endfor %}
-                                    {% endif %}
-                                {% endif %}
-                            </form>
-                        </div>
+
+
+                        <div class="dropdown">
+                          <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="font-size: larger;">
+                              {% set default_camera_label = "Select a Camera" %}
+                              {{ default_camera_label }}
+                          </button>
+                          <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton2">
+                              <form method="post">
+                                  <input type="hidden" name="page_uuid" value="{{ page_uuid }}">
+                                  {% if cameraName != False and cameraName != None %} <!-- IF THERE IS ANY CAMERA DATA AVALIBLE -->
+                                    {% for camera in cameraData %}
+                                        {% if camera[2] == fiskefelleId %} <!-- IF THE CAMERA IS CONNECTED TO THE SELECTED FISKEFELLE -->
+                                          {% if camera[4] == camIp %} <!-- IF IT IS THE SELECTED CAMERA -->
+                                              {% set default_camera_label = camera[3] %} <!-- SETS THE DEFAULT CAMERA -->
+                                              <script>
+                                                  document.getElementById("dropdownMenuButton2").innerHTML = "{{ default_camera_label }}"; // UPDATES THE BUTTON NAME TO THE SELECTED BUTTON NAME
+                                              </script>
+                                          {% endif %}
+                                        <button type="submit" class="dropdown-item" name="camera" value={{ camera[0] }} id={{ camera[0] }}>{{ camera[3] }}</button>
+                                        {% endif %}
+                                    {% endfor %}
+                                  {% endif %}
+                              </form>
+                          </div>
+                      </div>
+                  
                     </div>
                 </div>
             </div>

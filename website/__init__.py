@@ -49,6 +49,7 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_NAME}' # Sets the URI of the SQLite database
     db.init_app(app) # Initializes the SQLAlchemy database instance with the Flask app instance
 
+
     from .views import views
     from .auth import auth
 
@@ -73,19 +74,6 @@ def create_app():
 
 
 
-
-
-class Relay(): 
-    def __init__(self):
-
-
-        self.bus = smbus.SMBus(1) 
-
-        self.i2cAdress = 0x20 # SETS THE ADRESS OF THE RELAY BOARD
-        self.relayDict = {"relay1": 0xFE, "relay2": 0xFD, "relay3": 0xFB, "relay4": 0xF7, "relay5": 0xEF, "relay6": 0xDF, "offAll": 0xFF, "onAll": 0x00} # MAKES A DICTIONARY, FOR TURNING ON AND OFF THE RELAY
-
-    def switchRelay(self, command): 
-        self.bus.write_byte(self.i2cAdress, self.relayDict[command])
 
 
 """

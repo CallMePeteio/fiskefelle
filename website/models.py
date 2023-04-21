@@ -12,6 +12,7 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(150))
     admin = db.Column(db.Boolean)
 
+
 class FiskeFelle(db.Model):
     __tablename__ = 'fiskefelle'
     id = db.Column(db.Integer, primary_key=True)
@@ -27,6 +28,15 @@ class Camera(db.Model):
     fiskeFelleId = db.Column(db.Integer, db.ForeignKey('fiskefelle.id'))
     name = db.Column(db.String(150))
     ipAdress = db.Column(db.String(150))
+
+
+class Gate(db.Model): 
+    __tablename__ = 'gate'
+    id = db.Column(db.Integer, primary_key=True)
+    userId = db.Column(db.Integer, db.ForeignKey('user.id'))
+    fiskeFelleId = db.Column(db.Integer, db.ForeignKey('fiskefelle.id'))
+    name = db.Column(db.String(150))
+    relayChannel = db.Column(db.Integer)
 
 
 class Log(db.Model): 

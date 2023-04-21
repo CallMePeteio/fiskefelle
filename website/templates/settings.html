@@ -120,83 +120,7 @@
             </div>
 
 
-        <!-- User logins --
-        <div class="row mt-3">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h4>User Logins</h4>
-                    </div>
-                    <div class="card-body">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Username</th>
-                                    <th>Last Login Time</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>user1</td>
-                                    <td>2023-03-13 10:30:45</td>
-                                </tr>
-                                <tr>
-                                    <td>user2</td>
-                                    <td>2023-03-12 18:45:21</td>
-                                </tr>
-                                <tr>
-                                    <td>user3</td>
-                                    <td>2023-03-10 09:15:32</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Total Fiskefelle --
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h4>Total Fiskeffeler</h4>
-                    </div>
-                    <div class="card-body">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Lokasjon</th>
-                                    <th>Sist åpnet</th>
-                                    <th>Total Fisk Slippet Igjennom</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>berlevåg</td>
-                                    <td>2023-03-13 10:30:45</td>
-                                    <td>18</td>
-                                </tr>
-                                <tr>
-                                    <td>Beiarn</td>
-                                    <td>2023-03-12 18:45:21</td>
-                                    <td>23</td>
-                                </tr>
-                                <tr>
-                                    <td>Namsen</td>
-                                    <td>2023-03-10 09:15:32</td>
-                                    <td>2</td>
-
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div> 
-        </div>
-
-        
-        <div class="pt-4"></div>-->
-
-        
+     
         <!-- Add new camera -->
         <div class="row justify-content-left pt-4 flex-row">
             <div class="col-md-6">
@@ -265,21 +189,21 @@
                           <tbody>
                             {% if cameraData != None %} <!-- IF IT IS THE FIRST TIME RENDERING THE SETTINGS (NO CAMERA DATA )-->
                                 {% for camera in cameraData %} <!-- LOOPS OVER ALL OF THE DATA -->
-                                <tr>
-                                  <td>{{fiskefelleIdToName[camera[2]]}}</td> <!-- FISKEFELLE NAME -->
-                                  <td>{{ camera[3] }}</td> <!-- CAMERA NAME -->
-                                  <td class="text-break" style="font-size: 12px;">{{ camera[4] }}</td> <!-- CAMERA LINK -->
-                                  <td>
-                                    <form method="post">
-                                      <input type="hidden" name="deleteCamId" value="{{ camera[0] }}">
-                                      <button type="submit" class="btn btn-secondary" name="deleteCamBtn">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
-                                          <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
-                                          <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
-                                        </svg>
-                                      </button>
-                                    </form>
-                                  </td>
+                                  <tr>
+                                    <td>{{fiskefelleIdToName[camera[2]]}}</td> <!-- FISKEFELLE NAME -->
+                                    <td>{{ camera[3] }}</td> <!-- CAMERA NAME -->
+                                    <td class="text-break" style="font-size: 12px;">{{ camera[4] }}</td> <!-- CAMERA LINK -->
+                                    <td>
+                                      <form method="post">
+                                        <input type="hidden" name="deleteCamId" value="{{ camera[0] }}">
+                                        <button type="submit" class="btn btn-secondary" name="deleteCamBtn">
+                                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                                            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                                            <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                                          </svg>
+                                        </button>
+                                      </form>
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             {% endif %}
@@ -289,7 +213,102 @@
               </div>
           </div>
         </div>
+
+          <!-- ADD GATE TO FISKEFELLE  -->
+          <div class="row justify-content-left pt-4 flex-row">
+            <div class="col-md-6">
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h4>Add New Gate</h4>
+                    </div>
+                    <div class="card-body">
+                        <form method="post">
+                            <div class="form-group">
+                            <!-- DROPDOWN -->
+                                <label for="fiskefeller">Select Fiskefelle</label>
+                                <select class="form-control" id="cameraType" name="fiskefelleType">
+                                    {% if fiskefelleData != None and fiskefelleData != False %} <!-- IF THERE IS ANY FISKEFELLE DATA AVALIBLE -->
+                                        {% for fiskefelle in fiskefelleData %} <!-- LOOPS OVER ALL OF THE DATA -->
+                                            <option value="{{ fiskefelle[0] }}">{{ fiskefelle[2] }}</option>
+                                        {% endfor %}
+                                    {% else %} <!-- THE USER NEEDS TO ADD FISKEFELLE -->
+                                        <option value="None">Create a new fiskefelle first!</option>
+                                    {% endif %}
+                                </select>
+                            </div>
+                          
+                            <div class="form-group">
+                                <label for="password">Name</label>
+                                <input type="text" class="form-control" id="gateName" name="gateName" placeholder="Enter the name of the Gate"/>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="username">Relay Channel: <span id="relayChannelLabel">1</span></label>
+                                <input type="range" class="form-control-range" id="gateRelayChannel" name="gateRelayChannel" min="1" max="6" step="1" value="1" oninput="updateRelayChannelLabel(this.value);" />
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <input type="submit" class="btn btn-primary" name="createGate" value="Add Gate">
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+              <!-- Delete Gate -->
+              <div class="col-md-6">
+                  <div class="card">
+                      <div class="card-header">
+                          <h4>Delete Gate</h4>
+                      </div>
+                      <div class="card-body">
+                          <table class="table">
+                              <thead>
+                                  <tr>
+                                      <th>Fiskefelle</th>
+                                      <th>Name</th>
+                                      <th>Relay Channel</th>
+                                      <th>Delete</th>
+                                  </tr>
+                              </thead>
+                              <tbody>
+                                {% if gateData != None and gateData != False %} <!-- IF IT IS THE FIRST TIME RENDERING THE SETTINGS (NO CAMERA DATA )-->
+                                    {% for gate in gateData %} <!-- LOOPS OVER ALL OF THE DATA -->
+                                    <tr>
+                                      <td>{{fiskefelleIdToName[gate[2]]}}</td> <!-- FISKEFELLE NAME -->
+                                      <td>{{ gate[3] }}</td> <!-- CAMERA NAME -->
+                                      <td class="text-break" style="font-size: 12px;">{{ gate[4] }}</td> <!-- CAMERA LINK -->
+                                      <td>
+                                        <form method="post">
+                                          <input type="hidden" name="deleteGateId" value="{{ gate[0] }}">
+                                          <button type="submit" class="btn btn-secondary" name="deleteCamBtn">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                                              <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                                              <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                                            </svg>
+                                          </button>
+                                        </form>
+                                      </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% endif %}
+                              </tbody>
+                          </table>
+                      </div>
+                  </div>
+              </div>
+            </div>
+
+            <!-- SLIDER UPDATE FUNCTION -->
+            <script>
+              function updateRelayChannelLabel(value) {
+                  document.getElementById("relayChannelLabel").innerHTML = value;
+              }
+            </script>
+      
         
+
     {% elif isAdmin == False %}
         {% include 'error.html' %}
     {% endif %}
