@@ -39,11 +39,13 @@
               </div>
             </div>
         </div>
-          
+      
         <div class="pt-4"></div>
+
+
         <!-- CREATE NEW FISKEFELLE -->
         <div class="row justify-content-left pt-4 flex-row">
-           <div class="col-md-6"> <!-- Updated column class -->
+           <div class="col-md-6"> 
              <div class="card mb-3">
                <div class="card-header">
                  <h4>Create New Fiskefelle</h4>
@@ -91,11 +93,11 @@
                                 {% if fiskefelleData != None and fiskefelleData != None %} <!-- IF IT IS THE FIRST TIME RENDERING THE SETTINGS (NO CAMERA DATA )-->
                                     {% for fiskefelle in fiskefelleData %} <!-- LOOPS OVER ALL OF THE DATA -->
                                     <tr>
-                                      <td>{{ fiskefelle[2] }}</td>
+                                      <td>{{ fiskefelle[2] }}</td> <!-- DISPLAYS THE NAME -->
                                       <td>5</td>
-                                      {% if fiskefelle[3] == 0 %}
+                                      {% if fiskefelle[3] == 0 %} <!-- IF THE FISKEFELLE DATA IS 0-->
                                         <td>False</td>
-                                      {% elif fiskefelle[3] == 1 %}
+                                      {% elif fiskefelle[3] == 1 %} <!-- IF THE FISKEFELLE DATA IS 1 -->
                                         <td>True</td>
                                       {% endif %}
                                       <td>
@@ -157,12 +159,6 @@
                                 <div class="col-md-6">
                                     <input type="submit" class="btn btn-primary" name="createCam" value="Add Camera">
                                 </div>
-                                <!--<div class="col-md-6 text-right">
-                                    <div class="form-group form-check-inline">
-                                        <input type="checkbox" class="form-check-input" id="newCamCheckbox" name="newCamCheckbox">
-                                        <label class="form-check-label" for="checkbox">Must be admin</label>
-                                    </div>
-                                </div>-->
                             </div>
                         </form>
                     </div>
@@ -229,7 +225,7 @@
                                 <select class="form-control" id="cameraType" name="fiskefelleType">
                                     {% if fiskefelleData != None and fiskefelleData != False %} <!-- IF THERE IS ANY FISKEFELLE DATA AVALIBLE -->
                                         {% for fiskefelle in fiskefelleData %} <!-- LOOPS OVER ALL OF THE DATA -->
-                                            <option value="{{ fiskefelle[0] }}">{{ fiskefelle[2] }}</option>
+                                            <option value="{{ fiskefelle[0] }}">{{ fiskefelle[2] }}</option> <!-- DISPLAYS THE FISKEFELLE WITH THE VALUE AS THE ID OF THE FISKEFELLE -->
                                         {% endfor %}
                                     {% else %} <!-- THE USER NEEDS TO ADD FISKEFELLE -->
                                         <option value="None">Create a new fiskefelle first!</option>

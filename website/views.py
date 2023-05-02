@@ -12,25 +12,22 @@ from .models import Log
 from .relay import Relay
 from . import pathToDB
 from . import logging 
+from . import cache
 from . import db
 import sqlite3
 import json
 import uuid
 
-global page_cam_ips
-global pageDefaultFiskefelle
-page_cam_ips = {}
-pageDefaultFiskefelle = {}
 
-relay = Relay(i2cAdress=0x20, initialState=[0,0,0,0,0,0])
-views = Blueprint('views', __name__)
+
+relay = Relay(i2cAdress=0x20, initialState=[0,0,0,0,0,0]) # MAKES THE RELAY OBJECT, FOR CONTROLLING THE RELAY HAT
+views = Blueprint('views', __name__) # MAKES THE BLUPRINT OBJECT
 
 
 def logAction(userId, openDoor, turnLights): 
     log = Log(userId=userId, openDoor=openDoor, turnLights=turnLights)
     db.session.add(log)
     db.session.commit()
-
 def getDefaultFiskefelle(): 
     
     if session.get("isAdmin", False) == True: 
@@ -41,8 +38,6 @@ def getDefaultFiskefelle():
     if defaultFiskefelle != None:
         return defaultFiskefelle[0]
     return None
-
-
 def getDefaultIp(fiskefelleId):
     camIp = None
     camIp = selectFromDB(dbPath=pathToDB, table="camera", argumentList=["WHERE"], columnList=["fiskeFelleId"], valueList=str(fiskefelleId)) # GETS THE CAMERA IP 
@@ -62,19 +57,31 @@ def getDefaultIp(fiskefelleId):
 def home():
      
 
+    page_cam_ips = cache.get('page_cam_ips') or {} # MAKES THE CAM IPS DICTIONARY IF IT HASNT BEEN MADE YET
+    pageDefaultFiskefelle = cache.get('pageDefaultFiskefelle') or {} # MAKES THE CAM pageDefaultFiskefelle DICTIONARY IF IT HASNT BEEN MADE YET
+
     page_uuid = request.form.get('page_uuid', request.args.get('page_uuid', str(uuid.uuid4()))) # GETS THE UNIQUE UUID CODE FROM A PREVIOUS REQUEST, IF THE CODE HASNT BEEN MADE BEFORE THAN MAKE A NEW 
     camIp = page_cam_ips.get(page_uuid) # GETS THE IP ADRESS OF THE CAMERA FROM THE UNIQUE UUID IF IT IS THE FIRST TIME MAKING A UUID REQEST THEN THIS RETURNS NONE
     fiskefelleId = pageDefaultFiskefelle.get(page_uuid) # GETS THE ID OF THE DEFAULT FISKEFELLE FROM THE UNIQUE UUID IF IT IS THE FIRST TIME MAKING A UUID REQEST THEN THIS RETURNS NONE
+
+    logging.error(f"{camIp}, {page_cam_ips}, {page_uuid}")
+    logging.error(f"{camIp}, {pageDefaultFiskefelle}, {page_uuid}")
 
     if camIp == None or fiskefelleId == None: # IF THE "page_cam_ips.get(page_uuid)" RETURNS NONE OR THE pageDefaultFiskefelle.get(page_uuid) RETURNS NONE
         fiskefelleId = getDefaultFiskefelle()
         if fiskefelleId != None: # IF THERE HAS BEEN CREATED ANY FISKEFELLER BEFORE
             fiskefelleId = fiskefelleId[0]
             camIp = getDefaultIp(fiskefelleId) # GET A DEFAULT IP (FIRST TIME OPENING THE PAGE)
+
+            logging.warning(f"Before updating: page_cam_ips={page_cam_ips}, pageDefaultFiskefelle={pageDefaultFiskefelle}")
             page_cam_ips[page_uuid] = camIp # SETS THE UNIQUE IDENTIFYER
             pageDefaultFiskefelle[page_uuid] = fiskefelleId # SETS THE UNIQUE IDENTIFYER
+            logging.warning(f"After updating: page_cam_ips={page_cam_ips}, pageDefaultFiskefelle={pageDefaultFiskefelle}")
+
+    
 
     if request.method == "POST": 
+        logging.warning(f"main {page_cam_ips}")
         if request.form.get("open"): # IF SOMEONE CLICS A BUTTON THAT IS SUPPOSED TO OPEN A GATE
             relayChannel = int(request.form.get("open")) -1 # GETS WHAT RELAY CHANNEL TO OPEN
             relay.updateRelayState(1, relayChannel) # UPDATES THE RELAY HAT, CHANGES THE WANTED RELAY TO 1 (high)
@@ -85,29 +92,35 @@ def home():
         elif request.form.get("close"): # IF SOMEONE CLICS A BUTTON THAT IS SUPPOSED TO OPEN A GATE
             relayChannel = int(request.form.get("close")) -1 # GETS WHAT RELAY CHANNEL TO OPEN
             relay.updateRelayState(0, relayChannel) # UPDATES THE RELAY HAT, CHANGES THE WANTED RELAY TO + (low)
-
+            
             flash(f"Sucsessfully Closed the Gate on channel: {relayChannel}", category="sucsess")
             logging.info(f"   Closed relay channel: {relayChannel +1}") # LOGS THE ACTION
 
-        elif request.form.get("fiskefelleId"): 
-            fiskefelleId = int(request.form.get("fiskefelleId"))
-            camIp = getDefaultIp(fiskefelleId)
-            page_cam_ips[page_uuid] = camIp
-            logging.info(f"     Showing camera with ip: {camIp}")
+        elif request.form.get("fiskefelleId"): # IF SOMEONE WANTS TO CHANGE THE FISKEFELLE
+            fiskefelleId = int(request.form.get("fiskefelleId")) # GETS THE FISKEFELLE ID
+            pageDefaultFiskefelle[page_uuid] = fiskefelleId # SETS THE UNIQUE IDENTIFYER
+            camIp = getDefaultIp(fiskefelleId) # GETS THE DEFAULT CAMERA IP, ACCORDING TO THE NEW FISKEFELLE ID
+            page_cam_ips[page_uuid] = camIp # UPDATES THE CAMERA UUID.
+            logging.info(f"     Showing camera with ip: {camIp}") # LOGS THE ACTION
             
 # --- SELECT CAMERA HANDELING
-        elif request.form.get("camera"):
-            camId = request.form.get("camera")
-            camRow = selectFromDB(dbPath=pathToDB, table="camera", argumentList=["WHERE"], columnList=["id"], valueList=camId)
-            camIp = camRow[0][4]
-            page_cam_ips[page_uuid] = camIp
-            logging.info(f"     Showing camera with id: {camRow[0][0]}")
-
+        elif request.form.get("camera"): # IF SOMEONE WANTS TO CHANGE THE CAMERA
+            camId = request.form.get("camera") # GETS THE ID OF THE CAMERA THEY WANT TO CHANGE TO
+            camRow = selectFromDB(dbPath=pathToDB, table="camera", argumentList=["WHERE"], columnList=["id"], valueList=camId) # GETS THE ROW OF THE CAMERA THEY WANT TO VIEW
+            camIp = camRow[0][4] # FINDS THE IP
+            page_cam_ips[page_uuid] = camIp # UPDATES THE UUID LINK
+            logging.info(f"     Showing camera with id: {camRow[0][0]}") # LOGS THE ACTION
+        #logging.warning(f"After updating in POST: page_cam_ips={page_cam_ips}")
 
     
-    logging.warning(camIp)
-    print(session.get("cameraTable", False))
-    print(session.get("fiskefelleTable", False))
+    #logging.warning(camIp)
+    #logging.error(page_cam_ips.get(page_uuid), page_cam_ips)
+
+    #print(session.get("cameraTable", False))
+    #print(session.get("fiskefelleTable", False))
+
+    cache.set('page_cam_ips', page_cam_ips)
+    cache.set('pageDefaultFiskefelle', pageDefaultFiskefelle)
 
     return render_template("home.html", user=current_user, isAdmin=session.get("isAdmin", False), cameraName=getNameAndAdminCamera(session.get("cameraTable", False)), cameraData=session.get("cameraTable", False), camIp=camIp, fiskefelleId=fiskefelleId, page_uuid=page_uuid, fiskefelleData=session.get("fiskefelleTable", False), gateData=session.get("gateTable", False))
 
@@ -189,10 +202,10 @@ def checkNameRelayChannel(name, relayChannel, fiskefelleId):
             
                 if int(relayChannel) == gate[4]: # IF THE RELAYCHANNEL IS ALREADY IN USE
                     flash(f"Relay channel {relayChannel} is already in use by: {gate[3]}", category="error")
-                    return False
+                    return False # RETURNS FALSE TO STOP THE PROGRAM TO WRITING TO THE DB
                 if name == gate[3] and gate[2] == fiskefelleId: # IF IT IS THE FISKEFELLE WE ARE ADDING A GATE TO: # IF THE NAME IS ALREADY IN USE
-                    flash(f"Name: {name} already in Exists!", category="error")
-                    return False
+                    flash(f"Name: {name} already in Exists!", category="error") # FLASHES THE ERROR ON SCREEN
+                    return False # RETURNS FALSE TO STOP THE PROGRAM TO WRITING TO THE DB
 
     if fiskefelleId == "None":
         flash(f"You need to make fiskefelle before you make camera!", category='error') 
@@ -203,7 +216,7 @@ def checkNameRelayChannel(name, relayChannel, fiskefelleId):
     else: 
         flash("Sucsessfully created a new Gate!", category="sucsess")
         return True
-    return False
+    return False # RETURNS FALSE TO STOP THE PROGRAM TO WRITING TO THE DB
 
 
 def setCameraCache():
@@ -275,17 +288,20 @@ def settings():
 
 
 
+
+# --- CREATE GATE HANDELING
         elif request.form.get("createGate"):
             fiskefelleId = request.form.get("fiskefelleType") # GETS THE ID OF THE FISKEFELLE THAT THE CAMERA SHULD BE TIED TO
-            gateName = request.form.get("gateName")
-            relayChannel = request.form.get("gateRelayChannel")
+            gateName = request.form.get("gateName") # GETS THE NAME OF THE GATE, FORM THE INPUT FIELD
+            relayChannel = request.form.get("gateRelayChannel") # GETS WHAT RELAY CHANNEL THE BUTTON SHULD SWITCH
 
-            if checkNameRelayChannel(gateName, relayChannel, fiskefelleId) == True: 
-                gate = Gate(userId=current_user.id, fiskeFelleId=fiskefelleId, name=gateName, relayChannel=relayChannel)
-                db.session.add(gate)
-                db.session.commit()
-                setGateCache()
+            if checkNameRelayChannel(gateName, relayChannel, fiskefelleId) == True: # CHECKS IF THERE ISNT ANYTHING WRONG WITH THE INPUT
+                gate = Gate(userId=current_user.id, fiskeFelleId=fiskefelleId, name=gateName, relayChannel=relayChannel) # MAKES THE GATE OBJECT
+                db.session.add(gate) # ADDS THE GATE TO THE SESSION
+                db.session.commit() # WRITES THE GATE TO THE DB
+                setGateCache() # UPDATES THE CACHE
 
+# --- DELETE GATE HANDELING
         elif request.form.get("deleteGateId"): # IF SOMEONE PRESSED THE DELETE CAM BUTTON
             gateId = request.form.get("deleteGateId") # GETS THE ID OF THE BUTTON (SAME ID AS IN THE DATABACE)
 
@@ -307,15 +323,15 @@ def settings():
             name = request.form.get("nameFiskefelle") # GETS THE NAME OF THE FISKEFELLE
             adminView = 'newFiskefelleCheckbox' in request.form # GETS IF THE CHECKBOX HAS BEEN CHECKED
 
-            if checkFiskefelleName(name) == True:
-                fiskefelle = FiskeFelle(userId=current_user.id, name=name, adminView=adminView)
-                db.session.add(fiskefelle)
-                db.session.commit()
+            if checkFiskefelleName(name) == True: # CHECKS IF THERE ISNT ANY INVALID INPUT IN THE FISKEFELLE INPUT BOX
+                fiskefelle = FiskeFelle(userId=current_user.id, name=name, adminView=adminView) # MAKES THE FISKEFELLE OBJECT
+                db.session.add(fiskefelle) # ADDS IT TO THE SESSION
+                db.session.commit() # WRITES IT TO THE DB
                 setFiskefelleCache() # UPDATES THE CACHE
 
 # -- DELETE FISKEFELLE HANDELING
         elif request.form.get("deleteFiskefelleId"):
-            fiskefelleId = request.form.get("deleteFiskefelleId")
+            fiskefelleId = request.form.get("deleteFiskefelleId") # GETS THE ID OF THE FISKELLE THAT WAS DELETED (trash can button)
 
             con = sqlite3.connect(pathToDB) # CONNECTS TO THE DB
             cursor = con.cursor() # SETS THE CURSOR
@@ -336,8 +352,8 @@ def settings():
     print(session.get("gateTable", False))
     print()
 
-    if session.get("fiskefelleTable", False) != None:
-        fiskefelleIdToName = {fiskefelle[0]: fiskefelle[2] for fiskefelle in session.get("fiskefelleTable", False)}
+    if session.get("fiskefelleTable", False) != None: # IF THERE IS ANY DATA IN THE FISKEFELLE TABLE
+        fiskefelleIdToName = {fiskefelle[0]: fiskefelle[2] for fiskefelle in session.get("fiskefelleTable", False)} # THIS REUTRNS A DICTIONARY THAT LOOKS LIKE THIS: {id: name, 1:"storelven", 2:"beiarelven"}
     else: 
         fiskefelleIdToName = None
 

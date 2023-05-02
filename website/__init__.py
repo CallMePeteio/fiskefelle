@@ -2,8 +2,8 @@
 
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from flask_caching import Cache
 from flask import Flask
-
 
 import sqlite3
 import logging
@@ -11,7 +11,8 @@ import smbus
 import sys
 import os
 
-
+global cache
+cache = None
 
 db = SQLAlchemy()
 DB_NAME = "database.db"
@@ -24,12 +25,10 @@ Level: NOTSET > DEBUG > INFO > WARNING > ERROR > CRITICAL
 Value:   0    >  10   >  20  >    30   >  40   >  50
 """
 from .loggingFont import formatFont
-loggingLevel = 10 # DEFINES THE LOGGING LEVEL
+loggingLevel = 20 # DEFINES THE LOGGING LEVEL
 logger = logging.getLogger() # MAKES THE LOGGING OBJECT
 logger.setLevel(loggingLevel) # SETS THE LEVEL AS DEFINED ABOVE
 logger = formatFont(logger)
-
-maxLoginAtemts, timeoutMin = 20, 2
 
 
 """
@@ -43,12 +42,16 @@ Returns:
 The function returns a Flask application instance.
 """
 def create_app():
+    global cache
 
     app = Flask(__name__) # Creates an instance of Flask application with the given name
     app.config['SECRET_KEY'] = 'hjshjhdjah kjshkjdhjs' # Sets the secret key used for signing session cookies
     app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_NAME}' # Sets the URI of the SQLite database
+    app.config['CACHE_TYPE'] = 'simple'  # You can also use 'redis', 'memcached', or other cache types
+
     db.init_app(app) # Initializes the SQLAlchemy database instance with the Flask app instance
 
+    cache = Cache(app)
 
     from .views import views
     from .auth import auth
