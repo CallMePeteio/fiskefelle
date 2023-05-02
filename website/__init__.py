@@ -53,9 +53,11 @@ def create_app():
 
     cache = Cache(app)
 
+    from .backEnd import backEnd
     from .views import views
     from .auth import auth
 
+    app.register_blueprint(backEnd, url_prefix='/') # Registers the auth blueprint with the Flask app instance
     app.register_blueprint(views, url_prefix='/') # Registers the views blueprint with the Flask app instance
     app.register_blueprint(auth, url_prefix='/') # Registers the auth blueprint with the Flask app instance
 

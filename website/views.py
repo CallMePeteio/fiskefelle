@@ -64,24 +64,18 @@ def home():
     camIp = page_cam_ips.get(page_uuid) # GETS THE IP ADRESS OF THE CAMERA FROM THE UNIQUE UUID IF IT IS THE FIRST TIME MAKING A UUID REQEST THEN THIS RETURNS NONE
     fiskefelleId = pageDefaultFiskefelle.get(page_uuid) # GETS THE ID OF THE DEFAULT FISKEFELLE FROM THE UNIQUE UUID IF IT IS THE FIRST TIME MAKING A UUID REQEST THEN THIS RETURNS NONE
 
-    logging.error(f"{camIp}, {page_cam_ips}, {page_uuid}")
-    logging.error(f"{camIp}, {pageDefaultFiskefelle}, {page_uuid}")
-
     if camIp == None or fiskefelleId == None: # IF THE "page_cam_ips.get(page_uuid)" RETURNS NONE OR THE pageDefaultFiskefelle.get(page_uuid) RETURNS NONE
         fiskefelleId = getDefaultFiskefelle()
         if fiskefelleId != None: # IF THERE HAS BEEN CREATED ANY FISKEFELLER BEFORE
             fiskefelleId = fiskefelleId[0]
             camIp = getDefaultIp(fiskefelleId) # GET A DEFAULT IP (FIRST TIME OPENING THE PAGE)
 
-            logging.warning(f"Before updating: page_cam_ips={page_cam_ips}, pageDefaultFiskefelle={pageDefaultFiskefelle}")
             page_cam_ips[page_uuid] = camIp # SETS THE UNIQUE IDENTIFYER
             pageDefaultFiskefelle[page_uuid] = fiskefelleId # SETS THE UNIQUE IDENTIFYER
-            logging.warning(f"After updating: page_cam_ips={page_cam_ips}, pageDefaultFiskefelle={pageDefaultFiskefelle}")
 
     
 
     if request.method == "POST": 
-        logging.warning(f"main {page_cam_ips}")
         if request.form.get("open"): # IF SOMEONE CLICS A BUTTON THAT IS SUPPOSED TO OPEN A GATE
             relayChannel = int(request.form.get("open")) -1 # GETS WHAT RELAY CHANNEL TO OPEN
             relay.updateRelayState(1, relayChannel) # UPDATES THE RELAY HAT, CHANGES THE WANTED RELAY TO 1 (high)
@@ -110,14 +104,7 @@ def home():
             camIp = camRow[0][4] # FINDS THE IP
             page_cam_ips[page_uuid] = camIp # UPDATES THE UUID LINK
             logging.info(f"     Showing camera with id: {camRow[0][0]}") # LOGS THE ACTION
-        #logging.warning(f"After updating in POST: page_cam_ips={page_cam_ips}")
 
-    
-    #logging.warning(camIp)
-    #logging.error(page_cam_ips.get(page_uuid), page_cam_ips)
-
-    #print(session.get("cameraTable", False))
-    #print(session.get("fiskefelleTable", False))
 
     cache.set('page_cam_ips', page_cam_ips)
     cache.set('pageDefaultFiskefelle', pageDefaultFiskefelle)
