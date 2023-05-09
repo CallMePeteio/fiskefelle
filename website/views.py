@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, flash, session
+from flask import Blueprint, render_template, request, flash, session, jsonify
 from flask_login import login_required, current_user
 from werkzeug.security import generate_password_hash
 
@@ -30,11 +30,7 @@ def logAction(userId, openDoor, turnLights):
     db.session.commit()
 def getDefaultFiskefelle(): 
     
-    if session.get("isAdmin", False) == True: 
-        defaultFiskefelle = selectFromDB(dbPath=pathToDB, table="fiskefelle")
-    else: 
-        defaultFiskefelle = selectFromDB(dbPath=pathToDB, table="fiskefelle", argumentList=["WHERE"], columnList=["adminView"], valueList="1")
-    
+    defaultFiskefelle = selectFromDB(dbPath=pathToDB, table="fiskefelle")
     if defaultFiskefelle != None:
         return defaultFiskefelle[0]
     return None
@@ -80,14 +76,14 @@ def home():
             relayChannel = int(request.form.get("open")) -1 # GETS WHAT RELAY CHANNEL TO OPEN
             relay.updateRelayState(1, relayChannel) # UPDATES THE RELAY HAT, CHANGES THE WANTED RELAY TO 1 (high)
 
-            flash(f"Sucsessfully opened the Gate on channel: {relayChannel}", category="sucsess")
+            flash(f"Sucsessfully opened the Gate on channel: {relayChannel+1}", category="sucsess")
             logging.info(f"   Opened relay channel: {relayChannel +1}") # LOGS THE ACTION
 
         elif request.form.get("close"): # IF SOMEONE CLICS A BUTTON THAT IS SUPPOSED TO OPEN A GATE
             relayChannel = int(request.form.get("close")) -1 # GETS WHAT RELAY CHANNEL TO OPEN
             relay.updateRelayState(0, relayChannel) # UPDATES THE RELAY HAT, CHANGES THE WANTED RELAY TO + (low)
             
-            flash(f"Sucsessfully Closed the Gate on channel: {relayChannel}", category="sucsess")
+            flash(f"Sucsessfully Closed the Gate on channel: {relayChannel+1}", category="sucsess")
             logging.info(f"   Closed relay channel: {relayChannel +1}") # LOGS THE ACTION
 
         elif request.form.get("fiskefelleId"): # IF SOMEONE WANTS TO CHANGE THE FISKEFELLE
@@ -104,7 +100,7 @@ def home():
             camIp = camRow[0][4] # FINDS THE IP
             page_cam_ips[page_uuid] = camIp # UPDATES THE UUID LINK
             logging.info(f"     Showing camera with id: {camRow[0][0]}") # LOGS THE ACTION
-
+        
 
     cache.set('page_cam_ips', page_cam_ips)
     cache.set('pageDefaultFiskefelle', pageDefaultFiskefelle)
@@ -186,11 +182,15 @@ def checkNameRelayChannel(name, relayChannel, fiskefelleId):
 
     if gateTable != None and gateTable != False: # IF ANY DATA EXISTS
         for gate in gateTable: # LOOPS OVER ALL OF THE GATES
+                
+                print(gate[3], name)
+                print(gate[2], fiskefelleId)
             
                 if int(relayChannel) == gate[4]: # IF THE RELAYCHANNEL IS ALREADY IN USE
                     flash(f"Relay channel {relayChannel} is already in use by: {gate[3]}", category="error")
                     return False # RETURNS FALSE TO STOP THE PROGRAM TO WRITING TO THE DB
-                if name == gate[3] and gate[2] == fiskefelleId: # IF IT IS THE FISKEFELLE WE ARE ADDING A GATE TO: # IF THE NAME IS ALREADY IN USE
+                
+                if name == gate[3] and gate[2] == int(fiskefelleId): # IF IT IS THE FISKEFELLE WE ARE ADDING A GATE TO: # IF THE NAME IS ALREADY IN USE
                     flash(f"Name: {name} already in Exists!", category="error") # FLASHES THE ERROR ON SCREEN
                     return False # RETURNS FALSE TO STOP THE PROGRAM TO WRITING TO THE DB
 
@@ -205,24 +205,15 @@ def checkNameRelayChannel(name, relayChannel, fiskefelleId):
         return True
     return False # RETURNS FALSE TO STOP THE PROGRAM TO WRITING TO THE DB
 
-
 def setCameraCache():
-    if session.get("isAdmin", False) == True: # IF THE USER IS ADMIN 
-        session['cameraTable'] = selectFromDB(pathToDB, "camera", log=False) # SETS THE CASHE VARIABLE TO ALL OF THE CAMERA ROWS FROM THE CAMERA TABLE
-    else:
-        session['cameraTable'] = selectFromDB(pathToDB, "camera", ["WHERE"], ["adminView"], [False], log=False) # DOES THE SAME AS ABOVE BUT IT DOES NOT ADD THE ROWS THAT IS ONLY FOR THE ADMIN TO VIEW
+    session['cameraTable'] = selectFromDB(pathToDB, "camera", log=False) # SETS THE CASHE VARIABLE TO ALL OF THE CAMERA ROWS FROM THE CAMERA TABLE
 def setFiskefelleCache(): 
-    if session.get("isAdmin", False) == True: # IF THE USER IS ADMIN 
-        session['fiskefelleTable'] = selectFromDB(pathToDB, "fiskefelle", log=False) # SETS THE CASHE VARIABLE TO ALL OF THE CAMERA ROWS FROM THE CAMERA TABLE
-    else:
-        session['fiskefelleTable'] = selectFromDB(pathToDB, "fiskefelle", ["WHERE"], ["adminView"], [False], log=False) # DOES THE SAME AS ABOVE BUT IT DOES NOT ADD THE ROWS THAT IS ONLY FOR THE ADMIN TO VIEW
+    session['fiskefelleTable'] = selectFromDB(pathToDB, "fiskefelle", log=False) # SETS THE CASHE VARIABLE TO ALL OF THE CAMERA ROWS FROM THE CAMERA TABLE
 def setGateCache(): 
     session["gateTable"] = selectFromDB(pathToDB, "gate", log=False)            
 
 
     
-
-
 @views.route("/settings", methods=["GET", "POST"])
 @login_required
 def settings(): 
@@ -308,10 +299,9 @@ def settings():
 # --- CREATE FISKEFELLE HANELING
         elif request.form.get("createFiskefelle"):  # IF SOMEONE CLICKS THE "Create Fiskefelle" POST BUTTON
             name = request.form.get("nameFiskefelle") # GETS THE NAME OF THE FISKEFELLE
-            adminView = 'newFiskefelleCheckbox' in request.form # GETS IF THE CHECKBOX HAS BEEN CHECKED
 
             if checkFiskefelleName(name) == True: # CHECKS IF THERE ISNT ANY INVALID INPUT IN THE FISKEFELLE INPUT BOX
-                fiskefelle = FiskeFelle(userId=current_user.id, name=name, adminView=adminView) # MAKES THE FISKEFELLE OBJECT
+                fiskefelle = FiskeFelle(userId=current_user.id, name=name) # MAKES THE FISKEFELLE OBJECT
                 db.session.add(fiskefelle) # ADDS IT TO THE SESSION
                 db.session.commit() # WRITES IT TO THE DB
                 setFiskefelleCache() # UPDATES THE CACHE

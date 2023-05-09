@@ -61,20 +61,13 @@
                       <div class="col-md-6">
                         <input type="submit" class="btn btn-primary" name="createFiskefelle" value="Create Fiskefelle">
                       </div>
-
-                      <div class="col-md-6 text-right">
-                        <div class="form-group form-check-inline">
-                          <input type="checkbox" class="form-check-input" id="newFiskefelleCheckbox" name="newFiskefelleCheckbox">
-                          <label class="form-check-label" for="checkbox">Must be admin</label>
-                        </div>
-                      </div>
                     </div>
                   </form>
                </div>
              </div>
            </div>
             <!-- Delete Fiskefeller -->
-                <div class="col-md-6">
+                <div class="col-md-3">
                   <div class="card">
                       <div class="card-header">
                           <h4>Delete Fiskefelle</h4>
@@ -84,8 +77,6 @@
                               <thead>
                                   <tr>
                                       <th>Name</th>
-                                      <th>Camera Amount</th>
-                                      <th>Admin View</th>
                                       <th>Delete</th>
                                   </tr>
                               </thead>
@@ -94,12 +85,6 @@
                                     {% for fiskefelle in fiskefelleData %} <!-- LOOPS OVER ALL OF THE DATA -->
                                     <tr>
                                       <td>{{ fiskefelle[2] }}</td> <!-- DISPLAYS THE NAME -->
-                                      <td>5</td>
-                                      {% if fiskefelle[3] == 0 %} <!-- IF THE FISKEFELLE DATA IS 0-->
-                                        <td>False</td>
-                                      {% elif fiskefelle[3] == 1 %} <!-- IF THE FISKEFELLE DATA IS 1 -->
-                                        <td>True</td>
-                                      {% endif %}
                                       <td>
                                         <form method="post">
                                           <input type="hidden" name="deleteFiskefelleId" value="{{ fiskefelle[0] }}">

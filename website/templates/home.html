@@ -187,7 +187,7 @@
 
               <div class="card-body"> 
                 <div class="list-group">
-                  <form method="post">
+                  <form method="post" class="btnRequest">
                     <input type="hidden" name="page_uuid" value="{{ page_uuid }}">
                     <button class="btn btn-primary button" name="open" value="{{ gate[4] }}">Åpne port</button> <!-- THIS HAS THE NAME OF OPEN/CLOSE AND THE VALUE IS THE RELAYCHANNEL-->
                     <button class="btn btn-danger button" name="close" value="{{ gate[4] }}">Lukk port</button> <!-- THIS HAS THE NAME OF OPEN/CLOSE AND THE VALUE IS THE RELAYCHANNEL-->
@@ -308,5 +308,4 @@
 </div>
 
 <div style="padding-top: 70vh"></div>
-
 {% endblock %}
