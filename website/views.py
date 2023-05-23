@@ -156,8 +156,6 @@ def checkNameIpId(name, ip, fiskefelleId):
 
     if len(name) > 130: 
         flash("Name cant be greater than 130 charachters", category='error')
-    elif ip.count(".") < 3: 
-        flash(f"Invalid ip adress entered: {ip}", category='error')
     elif fiskefelleId == "None":
         flash(f"You need to make fiskefelle before you make camera!", category='error')
 
@@ -204,6 +202,18 @@ def checkNameRelayChannel(name, relayChannel, fiskefelleId):
         flash("Sucsessfully created a new Gate!", category="sucsess")
         return True
     return False # RETURNS FALSE TO STOP THE PROGRAM TO WRITING TO THE DB
+def checkValidDeleteId(id):
+    userData = session.get("userTable", False)
+
+    for user in userData: 
+        if user[0] == int(id): 
+            if user[1] != "admin@gmail.com": 
+                return True
+            else: 
+                flash("You Cheecky bugger, Cannot delete the admin user", category="error")
+    flash("Error on finding the correct user to delete", category="error")
+    return False     
+
 
 def setCameraCache():
     session['cameraTable'] = selectFromDB(pathToDB, "camera", log=False) # SETS THE CASHE VARIABLE TO ALL OF THE CAMERA ROWS FROM THE CAMERA TABLE
@@ -211,8 +221,8 @@ def setFiskefelleCache():
     session['fiskefelleTable'] = selectFromDB(pathToDB, "fiskefelle", log=False) # SETS THE CASHE VARIABLE TO ALL OF THE CAMERA ROWS FROM THE CAMERA TABLE
 def setGateCache(): 
     session["gateTable"] = selectFromDB(pathToDB, "gate", log=False)            
-
-
+def setUserCache(): 
+    session["userTable"] = selectFromDB(pathToDB, "user", log=False) # UPDATES THE USER CACHE
     
 @views.route("/settings", methods=["GET", "POST"])
 @login_required
@@ -232,6 +242,23 @@ def settings():
                 db.session.add(user) # ADDS THE OBJECT TO THE SESSION, FOR ADDING TO THE DB
                 db.session.commit() # COMMITS TO THE ACTION
                 setCameraCache() # UPDATED THE CAMERA CACHE
+                setUserCache() # UPDATES THE USER CACHE
+
+        elif request.form.get("deleteUser"): 
+            userId = request.form.get("deleteUser")
+            
+            if checkValidDeleteId(userId) == True: 
+                con = sqlite3.connect(pathToDB) # CONNECTS TO THE DB
+                cursor = con.cursor() # SETS THE CURSOR
+                cursor.execute("DELETE FROM 'user' WHERE id=?", (userId,)) # DELETES THE ROW THAT HAS BEEN PRESSED RELEASED ON
+                con.commit() # COMMITS TO THE ACTION
+                con.close()
+
+                setUserCache()  # UPDATES THE CACHE
+                flash(f"Sucsessfully deleted the User!") # Flashes a message
+
+
+
 
 
 
@@ -322,16 +349,24 @@ def settings():
             setGateCache() # UPDATES THE GATE CACHE
             flash(f"Sucsessfully deleted the Fiskefelle!") # Flashes a message
 
+        print()
+        print()
+        print(request.form.get("deleteUser"))
+        print(request.form.get("createFiskefelle")) 
+        print()
+        print()
 
-    print()
-    print(session.get("cameraTable", False))
-    print(session.get("fiskefelleTable", False))
-    print(session.get("gateTable", False))
-    print()
+
+    #print()
+    #print(session.get("cameraTable", False))
+    #print(session.get("fiskefelleTable", False))
+    #print(session.get("gateTable", False))
+    #print(session.get("userTable", False))
+    #print()
 
     if session.get("fiskefelleTable", False) != None: # IF THERE IS ANY DATA IN THE FISKEFELLE TABLE
         fiskefelleIdToName = {fiskefelle[0]: fiskefelle[2] for fiskefelle in session.get("fiskefelleTable", False)} # THIS REUTRNS A DICTIONARY THAT LOOKS LIKE THIS: {id: name, 1:"storelven", 2:"beiarelven"}
     else: 
         fiskefelleIdToName = None
 
-    return render_template("settings.html", user=current_user, isAdmin=session.get("isAdmin", False), cameraName=getNameAndAdminCamera(session.get("cameraTable", False)), cameraData=session.get("cameraTable", False), fiskefelleData=session.get("fiskefelleTable", False), fiskefelleIdToName=fiskefelleIdToName, gateData=session.get("gateTable", False))
+    return render_template("settings.html", user=current_user, isAdmin=session.get("isAdmin", False), cameraName=getNameAndAdminCamera(session.get("cameraTable", False)), cameraData=session.get("cameraTable", False), fiskefelleData=session.get("fiskefelleTable", False), fiskefelleIdToName=fiskefelleIdToName, gateData=session.get("gateTable", False), userData=session.get("userTable", False))

@@ -1,20 +1,25 @@
 {% extends "base.html" %} {% block title %}Login{% endblock %} {% block content
 %}
 
-<form method="POST">
-  <h3 align="center">Login</h3>
+<div class="container mt-5">
 
-  <div class="form-group">
-    <label for="email">Email Address</label>
-    <input type="email" class="form-control" id="email" name="email" placeholder="Enter email"/>
-  </div>
+  <form method="POST" class="card p-5 shadow-lg" style="max-width: 500px; margin: auto;">
+    <h3 class="text-center mb-4">Login</h3>
 
-  <div class="form-group">
-    <label for="password">Password</label>
-    <input type="password" class="form-control" id="password" name="password" placeholder="Enter password"/>
-  </div>
+    <div class="form-group">
+      <label for="email">Email Address</label>
+      <input type="email" class="form-control" id="email" name="email" placeholder="Enter email" required>
+    </div>
 
-  <br />
-  <button type="submit" class="btn btn-primary">Login</button>
-</form>
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input type="password" class="form-control" id="password" name="password" placeholder="Enter password" required>
+    </div>
+    
+    <div class="form-group mt-4">
+      <button type="submit" class="btn btn-primary w-100">Login</button>
+    </div>
+  </form>
+
+</div>
 {% endblock %}

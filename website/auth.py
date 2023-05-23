@@ -41,9 +41,8 @@ def login():
                 session["gateTable"] = gateTable  # SETS THE RECIVE DATA TO A GLOBAL VARIABLE, IM USING THIS TO CASH THE TABLE "gateTable", SO I DONT HAFT TO READ FORM THE DB EVRYTIME I MAKE A REQUEST
                 session['cameraTable'] = camTable # SETS THE RECIVE DATA TO A GLOBAL VARIABLE, IM USING THIS TO CASH THE TABLE "cameras", SO I DONT HAFT TO READ FORM THE DB EVRYTIME I MAKE A REQUEST
                 session["fiskefelleTable"] = fiskefeleTable # SETS THE RECIVE DATA TO A GLOBAL VARIABLE, IM USING THIS TO CASH THE TABLE "fiskefelle", SO I DONT HAFT TO READ FORM THE DB EVRYTIME I MAKE A REQUEST
-    
-
-
+                session["userTable"] = selectFromDB(pathToDB, "user", log=False) # UPDATES THE USER CACHE
+                
                 return redirect(url_for('views.home')) # REDIRECTS THE USER TO HOME
 
             else:
@@ -61,18 +60,26 @@ def logout():
     return redirect(url_for('auth.login'))
 
 
-@auth.route('/debug')
+@auth.route('/generateAdminUser', methods=["GET", "POST"])
 def debug():
+    adminEmail = "admin@gmail.com" # DEFINES THE DEFAULT ADMIN USERNAME   
 
-    loginEmail = "admin@gmail.com" # ALLE DE FORKJELLIGE BRUKERNAVNENE PÅ NETTSIDENM
-    loginPaswd = "Passord1" # ALLE DE FORKJELLIGE PASSORDENE TIL NETTSIDENE
+    user = User.query.filter_by(email=adminEmail).first() # GETS IF THE ADMIN EMAIL HAS ALREADY BEEN CREATED
+    if not user: # IF THE USER HASNT BEEN CREATED BEFORE
+        if request.method == "POST":
+ 
+            adminPassword = request.form.get("password") # GETS THE PASSWORD INPUTTED BY THE SETUP TECH
 
-    user = User(email=loginEmail, password=generate_password_hash(loginPaswd, method='sha256'), admin=True)
-    db.session.add(user)
-    db.session.commit()
+            user = User(email=adminEmail, password=generate_password_hash(adminPassword, method='sha256'), admin=True) # MAKES THE USER, AND HASHES THE PASSWORD
+            db.session.add(user)
+            db.session.commit()
 
-
-    return render_template("basic.html", user=current_user)
+            user = User.query.filter_by(email=adminEmail).first() # MAKES THE USER OBJECT
+            login_user(user, remember=True) # LOGS IN THE USER
+            return redirect(url_for('views.home')) # REDIRECTS THE USER TO HOME
+        return render_template("adminGeneration.html", user=current_user)
+    else:
+        return "<h1> ERROR ADMIN USER HAS ALREADY BEEN GENERATED </h1> <a href='/login' class='display-4 text-danger font-weight-bold' style='font-size: 1.7rem;'>Return to the Login Page!</a>"
 
   
 
