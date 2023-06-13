@@ -56,10 +56,12 @@ def create_app():
     from .backEnd import backEnd
     from .views import views
     from .auth import auth
+    from .rstp import rstp
 
     app.register_blueprint(backEnd, url_prefix='/') # Registers the auth blueprint with the Flask app instance
     app.register_blueprint(views, url_prefix='/') # Registers the views blueprint with the Flask app instance
     app.register_blueprint(auth, url_prefix='/') # Registers the auth blueprint with the Flask app instance
+    app.register_blueprint(rstp, url_prefix='/') # Registers the auth blueprint with the Flask app instance
 
     from .models import User, Log
 

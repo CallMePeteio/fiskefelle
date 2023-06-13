@@ -195,7 +195,20 @@
                                 <div class="col-md-6">
                                     <input type="submit" class="btn btn-primary" name="createCam" value="Add Camera">
                                 </div>
-                            </div>
+
+                                
+                                <div class="col-md-6 text-right">
+                                  <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                                      <label class="btn btn-outline-primary active">
+                                          <input type="radio" name="streamOption" value="http" id="http" checked> HTTP <!-- Default value set to HTTP -->
+                                      </label>
+                                      <label class="btn btn-outline-primary">
+                                          <input type="radio" name="streamOption" value="rstp" id="rstp"> RTSP
+                                      </label>
+                                  </div>
+                              </div>
+                          </div>
+
                         </form>
                     </div>
                 </div>
@@ -214,7 +227,7 @@
                               <tr>
                                   <th>Fiskefelle</th>
                                   <th>Name</th>
-                                  <th>Link</th>
+                                  <th>Path</th>
                                   <th>Delete</th>
                               </tr>
                           </thead>
@@ -223,8 +236,8 @@
                                 {% for camera in cameraData %} <!-- LOOPS OVER ALL OF THE DATA -->
                                   <tr>
                                     <td>{{fiskefelleIdToName[camera[2]]}}</td> <!-- FISKEFELLE NAME -->
-                                    <td>{{ camera[3] }}</td> <!-- CAMERA NAME -->
-                                    <td class="text-break" style="font-size: 12px;">{{ camera[4] }}</td> <!-- CAMERA LINK -->
+                                    <td>{{ camera[4] }}</td> <!-- CAMERA NAME -->
+                                    <td class="text-break" style="font-size: 12px;">{{ camera[5] }}</td> <!-- CAMERA LINK -->
                                     <td>
                                       <form method="post">
                                         <input type="hidden" name="deleteCamId" value="{{ camera[0] }}">
@@ -337,6 +350,18 @@
               function updateRelayChannelLabel(value) {
                   document.getElementById("relayChannelLabel").innerHTML = value;
               }
+            </script>
+
+            <script>
+              // When the HTTP button is clicked, uncheck the RTSP button
+              document.getElementById('httpOption').addEventListener('click', function() {
+                  document.getElementById('rtspOption').checked = false;
+              });
+            
+              // When the RTSP button is clicked, uncheck the HTTP button
+              document.getElementById('rtspOption').addEventListener('click', function() {
+                  document.getElementById('httpOption').checked = false;
+              });
             </script>
       
         

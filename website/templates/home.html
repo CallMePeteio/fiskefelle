@@ -167,9 +167,23 @@
     <!-- Camera Container -->
     <div class="col-md-12" id="camera-container">
       <div class="iframe-wrapper">
-        <!--<iframe src={{ camIp }} frameborder="0" allowfullscreen id="camera"></iframe>-->
         <div class="embed-responsive embed-responsive-16by9">
-          <iframe class="embed-responsive-item" src="{{ camIp }}" allowfullscreen></iframe>
+
+
+          <h1>{{isRstp}}</h1>
+          {% if isRstp == 1 %}
+            <iframe class="embed-responsive-item" src="192.168.1.10/rstpStream" allowfullscreen></iframe>
+
+          {% else %}
+            <iframe class="embed-responsive-item" src="{{ camIp }}" allowfullscreen></iframe>
+          {% endif %}
+
+          
+
+
+
+          
+
         </div>
       </div>
     </div>  
@@ -178,25 +192,23 @@
     <!-- Port Container -->
     {% if gateData != None and gateData != False %} <!-- IF THERE IS ANY GATE DATA -->
       {% for gate in gateData %} <!-- LOOPS OVER ALL OF THE GATES -->
-        {% if gate[2] == fiskefelleId %} <!-- IF THE GATE IS CONNECTED TO THE SELECTED FISKEFELLE -->
-          <div class="col-md-3 float-end">  
-            <div style="padding-top: 10px;"></div>
-            <div class="card">
-
-              <div class="card-header d-flex justify-content-between align-items-center">{{ gate[3] }}</div> <!-- THE NAME OF THE GATE -->
-
-              <div class="card-body"> 
-                <div class="list-group">
-                  <form method="post" class="btnRequest">
-                    <input type="hidden" name="page_uuid" value="{{ page_uuid }}">
-                    <button class="btn btn-primary button" name="open" value="{{ gate[4] }}">Åpne port</button> <!-- THIS HAS THE NAME OF OPEN/CLOSE AND THE VALUE IS THE RELAYCHANNEL-->
-                    <button class="btn btn-danger button" name="close" value="{{ gate[4] }}">Lukk port</button> <!-- THIS HAS THE NAME OF OPEN/CLOSE AND THE VALUE IS THE RELAYCHANNEL-->
-                  </form>
-                </div>
+          {% if gate[2] == fiskefelleId %} <!-- IF THE GATE IS CONNECTED TO THE SELECTED FISKEFELLE -->
+              <div class="col-md-3">  <!-- removed 'float-end' class -->
+                  <div style="padding-top: 10px;"></div>
+                  <div class="card">
+                      <div class="card-header d-flex justify-content-between align-items-center">{{ gate[3] }}</div> <!-- THE NAME OF THE GATE -->
+                      <div class="card-body"> 
+                          <div class="list-group">
+                              <form method="post" class="btnRequest">
+                                  <input type="hidden" name="page_uuid" value="{{ page_uuid }}">
+                                  <button class="btn btn-primary button" name="open" value="{{ gate[4] }}">Åpne port</button> <!-- THIS HAS THE NAME OF OPEN/CLOSE AND THE VALUE IS THE RELAYCHANNEL-->
+                                  <button class="btn btn-danger button" name="close" value="{{ gate[4] }}">Lukk port</button> <!-- THIS HAS THE NAME OF OPEN/CLOSE AND THE VALUE IS THE RELAYCHANNEL-->
+                              </form>
+                          </div>
+                      </div>
+                  </div>
               </div>
-            </div>
-          </div>
-        {% endif %}
+          {% endif %}  
       {% endfor %}
     {% endif %}
 
@@ -255,13 +267,13 @@
                                   {% if cameraName != False and cameraName != None %} <!-- IF THERE IS ANY CAMERA DATA AVALIBLE -->
                                     {% for camera in cameraData %}
                                         {% if camera[2] == fiskefelleId %} <!-- IF THE CAMERA IS CONNECTED TO THE SELECTED FISKEFELLE -->
-                                          {% if camera[4] == camIp %} <!-- IF IT IS THE SELECTED CAMERA -->
-                                              {% set default_camera_label = camera[3] %} <!-- SETS THE DEFAULT CAMERA -->
+                                          {% if camera[5] == camIp %} <!-- IF IT IS THE SELECTED CAMERA -->
+                                              {% set default_camera_label = camera[4] %} <!-- SETS THE DEFAULT CAMERA -->
                                               <script>
                                                   document.getElementById("dropdownMenuButton2").innerHTML = "{{ default_camera_label }}"; // UPDATES THE BUTTON NAME TO THE SELECTED BUTTON NAME
                                               </script>
                                           {% endif %}
-                                        <button type="submit" class="dropdown-item" name="camera" value={{ camera[0] }} id={{ camera[0] }}>{{ camera[3] }}</button>
+                                        <button type="submit" class="dropdown-item" name="camera" value={{ camera[0] }} id={{ camera[0] }}>{{ camera[4] }}</button>
                                         {% endif %}
                                     {% endfor %}
                                   {% endif %}

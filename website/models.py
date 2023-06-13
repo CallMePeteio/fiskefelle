@@ -26,6 +26,7 @@ class Camera(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     userId = db.Column(db.Integer, db.ForeignKey('user.id'))
     fiskeFelleId = db.Column(db.Integer, db.ForeignKey('fiskefelle.id'))
+    rstp = db.Column(db.Boolean)
     name = db.Column(db.String(150))
     ipAdress = db.Column(db.String(150))
 
