@@ -172,8 +172,7 @@
 
           <h1>{{isRstp}}</h1>
           {% if isRstp == 1 %}
-            <iframe class="embed-responsive-item" src="192.168.1.10/rstpStream" allowfullscreen></iframe>
-
+            <iframe class="embed-responsive-item" src="http://127.0.0.1:3389/rstpStream" allowfullscreen></iframe>
           {% else %}
             <iframe class="embed-responsive-item" src="{{ camIp }}" allowfullscreen></iframe>
           {% endif %}
