@@ -20,6 +20,14 @@ class FiskeFelle(db.Model):
     name = db.Column(db.String(150))
     adminView = db.Column(db.Boolean)
 
+class Videos(db.Model):
+    __tablename__ = 'videos'
+    id = db.Column(db.Integer, primary_key=True)
+    userId = db.Column(db.Integer, db.ForeignKey('user.id'))
+    fileName = db.Column(db.String(150))
+    duration = db.Column(db.String(150))
+
+
 
 class Camera(db.Model): 
     __tablename__ = 'camera'
