@@ -81,6 +81,16 @@ def videoTable():
 
     
         elif request.form.get("deleteVideoId"):
+
+            videoName = request.form.get("deleteVideoName") # GETS THE VIDEO NAME 
+            recordingDir = os.path.abspath("website/recordings") # GETS THE FULL RECORDING PATH
+            recordingsFile = os.path.join(recordingDir, videoName + ".mp4") # ADDS THE VIDEO NAME TO THE RECORDING PATH
+
+            if os.path.exists(recordingsFile): # CHECKS IF THE FILE EXISTS
+                  os.remove(recordingsFile) # DELETES THE FILE
+
+
+
             con = sqlite3.connect(pathToDB) # CONNECTS TO THE DB
             cursor = con.cursor() # SETS THE CURSOR
             cursor.execute("DELETE FROM 'videos' WHERE id=?", (request.form.get("deleteVideoId"),)) # DELETES THE ROW THAT HAS BEEN PRESSED RELEASED ON

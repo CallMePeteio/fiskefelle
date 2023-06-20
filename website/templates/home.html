@@ -277,42 +277,45 @@
                           </div>
                       </div>
                   
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    
 
-    <!-- Misc Container 
-    <div class="col-md-3 float-end">
-      <div class="card">
-        <div class="card-header">Misc</div>
-        <div class="card-body"> 
-          
-          <div class="list-group">
-            <form method="post">
-              <button class="btn btn-primary button">Lys På</button>
-              <button class="btn btn-danger button">Lys Av</button>
-            </form>
+
+
+                      
+                      </div>
+                  </div>
+              </div>
           </div>
-        </div>
-      </div>
-    </div>
-  </div> -->
-  
 
-  <!--
-  <div class="col-md-3 float-end">
-    <div class="card">
-      <div class="card-header">Informasjon</div>
-      <div class="card-body"> 
-        
-        <p>Oppetid: 12dager</p>
+          <div class="col-md-3">
+            <div style="padding-top: 10px;"></div>
+            <div class="card">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                Recording
+                <div class="indicator-container">
+                  <span class="badge badge-{{ 'danger' if is_recording else 'primary' }}">{{ 'Recording' if is_recording else 'Not Recording' }}</span>
+                </div>
+              </div>
+              
+              <div class="card-body">
+                <div class="list-group">
+                  <form method="post" class="btnRequest">
+                    <button class="btn btn-primary button" name="start_recording" value="start_recording">Start Recording</button>
+                    <button class="btn btn-danger button" name="stop_recording" value="stop_recording">Stop Recording</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+    
       </div>
-    </div>
-  </div>-->
+
+
+
+
+
+
+
 </div>
 
 <div style="padding-top: 70vh"></div>
