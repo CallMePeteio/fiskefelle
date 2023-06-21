@@ -43,6 +43,7 @@ The function returns a Flask application instance.
 """
 def create_app():
     global cache
+    global app
 
     app = Flask(__name__) # Creates an instance of Flask application with the given name
     app.config['SECRET_KEY'] = 'hjshjhdjah kjshkjdhjs' # Sets the secret key used for signing session cookies

@@ -4,6 +4,7 @@ from werkzeug.security import generate_password_hash
 
 from . import getNameAndAdminCamera
 from . import selectFromDB
+from .video import readRecStartVar
 from .models import FiskeFelle
 from .models import Camera
 from .models import User
@@ -17,6 +18,8 @@ from . import db
 import sqlite3
 import json
 import uuid
+import time
+import os
 
 
 
@@ -47,6 +50,22 @@ def getDefaultIp(fiskefelleId):
     return camIp
 
 
+def setStartRecVar(var):
+    instanceDir = os.path.abspath("instance") # GETS THE FULL PATH OF THE INSTANCE DIRECTORY
+    recJsonPath = instanceDir + "/startRecord.json" # MAKES THE FULL PATH TO THE JOSN FILE
+    startRec = {"startRec": var}
+    session["startRec"] = var # STARTS RECORDING (CURRENTLY NOT USED)
+
+    while True: # LOOPS A BUNCH OF TIMES BECAUSE THERE COULD BE OTHER SRIPTS READING/WRITING TO FILE CAUSING AN ERROR
+        try:
+            with open(recJsonPath, 'w') as outfile:
+                json.dump(startRec, outfile)
+                break
+        except:
+            print("There was an error acsessing: startRecord.json file!")
+
+
+
 
 @views.route('/', methods=['GET', 'POST'])
 @login_required
@@ -72,6 +91,9 @@ def home():
     
 
     if request.method == "POST": 
+
+
+#------------------------------- GATES
         if request.form.get("open"): # IF SOMEONE CLICS A BUTTON THAT IS SUPPOSED TO OPEN A GATE
             relayChannel = int(request.form.get("open")) -1 # GETS WHAT RELAY CHANNEL TO OPEN
             relay.updateRelayState(1, relayChannel) # UPDATES THE RELAY HAT, CHANGES THE WANTED RELAY TO 1 (high)
@@ -86,6 +108,9 @@ def home():
             flash(f"Sucsessfully Closed the Gate on channel: {relayChannel+1}", category="sucsess")
             logging.info(f"   Closed relay channel: {relayChannel +1}") # LOGS THE ACTION
 
+
+
+#------------------------------- CAMERA SWITCH
         elif request.form.get("fiskefelleId"): # IF SOMEONE WANTS TO CHANGE THE FISKEFELLE
             fiskefelleId = int(request.form.get("fiskefelleId")) # GETS THE FISKEFELLE ID
             pageDefaultFiskefelle[page_uuid] = fiskefelleId # SETS THE UNIQUE IDENTIFYER
@@ -93,14 +118,26 @@ def home():
             page_cam_ips[page_uuid] = camIp # UPDATES THE CAMERA UUID.
             logging.info(f"     Showing camera with ip: {camIp}") # LOGS THE ACTION
             
-# --- SELECT CAMERA HANDELING
         elif request.form.get("camera"): # IF SOMEONE WANTS TO CHANGE THE CAMERA
             camId = request.form.get("camera") # GETS THE ID OF THE CAMERA THEY WANT TO CHANGE TO
             camRow = selectFromDB(dbPath=pathToDB, table="camera", argumentList=["WHERE"], columnList=["id"], valueList=camId) # GETS THE ROW OF THE CAMERA THEY WANT TO VIEW
             camIp = camRow[0][5] # FINDS THE IP
             page_cam_ips[page_uuid] = camIp # UPDATES THE UUID LINK
             logging.info(f"     Showing camera with id: {camRow[0][0]}") # LOGS THE ACTION
+
+
         
+#------------------------------- RECORDING
+        elif request.form.get("startRecording"):
+            setStartRecVar(True) # STARTS RECORDING (video.py)
+            
+        elif request.form.get("stopRecording"):
+            setStartRecVar(False) # STOPS RECORDING (video.py)
+            time.sleep(0.5)
+                   
+
+        
+
 
     cache.set('page_cam_ips', page_cam_ips)
     cache.set('pageDefaultFiskefelle', pageDefaultFiskefelle)
@@ -111,7 +148,7 @@ def home():
 
 
 
-    return render_template("home.html", user=current_user, isAdmin=session.get("isAdmin", False), cameraName=getNameAndAdminCamera(session.get("cameraTable", False)), cameraData=session.get("cameraTable", False), camIp=camIp, fiskefelleId=fiskefelleId, page_uuid=page_uuid, fiskefelleData=session.get("fiskefelleTable", False), gateData=session.get("gateTable", False), isRstp=selectedCamera[0][3])
+    return render_template("home.html", user=current_user, isAdmin=session.get("isAdmin", False), cameraName=getNameAndAdminCamera(session.get("cameraTable", False)), cameraData=session.get("cameraTable", False), camIp=camIp, fiskefelleId=fiskefelleId, page_uuid=page_uuid, fiskefelleData=session.get("fiskefelleTable", False), gateData=session.get("gateTable", False), isRstp=selectedCamera[0][3], is_recording=readRecStartVar())
 
 
 
@@ -305,7 +342,7 @@ def settings():
 
 
 
-
+  
 # --- CREATE FISKEFELLE HANELING
         elif request.form.get("createFiskefelle"):  # IF SOMEONE CLICKS THE "Create Fiskefelle" POST BUTTON
             name = request.form.get("nameFiskefelle") # GETS THE NAME OF THE FISKEFELLE

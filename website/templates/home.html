@@ -169,7 +169,8 @@
       <div class="iframe-wrapper">
         <div class="embed-responsive embed-responsive-16by9">
           {% if isRstp == 1 %}
-            <iframe class="embed-responsive-item" src="http://127.0.0.1:3389/rstpStream" allowfullscreen></iframe>
+            <!--<iframe class="embed-responsive-item" src="http://127.0.0.1:3389/rtspStream" allowfullscreen></iframe>-->
+            <img class="embed-responsive-item" src="/rtspStream">
           {% else %}
             <iframe class="embed-responsive-item" src="{{ camIp }}" allowfullscreen></iframe>
           {% endif %}
@@ -287,6 +288,7 @@
               </div>
           </div>
 
+          <!-- RECORDING BUTTONS -->
           <div class="col-md-3">
             <div style="padding-top: 10px;"></div>
             <div class="card">
@@ -300,14 +302,13 @@
               <div class="card-body">
                 <div class="list-group">
                   <form method="post" class="btnRequest">
-                    <button class="btn btn-primary button" name="start_recording" value="start_recording">Start Recording</button>
-                    <button class="btn btn-danger button" name="stop_recording" value="stop_recording">Stop Recording</button>
+                    <button class="btn btn-primary button" name="startRecording" value="startRecording">Start Recording</button>
+                    <button class="btn btn-danger button" name="stopRecording" value="stopRecording">Stop Recording</button>
                   </form>
                 </div>
-              </div>
+              </div>   
             </div>
           </div>
-    
       </div>
 
 
