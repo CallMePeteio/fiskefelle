@@ -3,8 +3,9 @@ from flask_login import login_required, current_user
 from werkzeug.security import generate_password_hash
 
 from . import getNameAndAdminCamera
+from . import readRecStartVar
 from . import selectFromDB
-from .video import readRecStartVar
+
 from .models import FiskeFelle
 from .models import Camera
 from .models import User
@@ -128,6 +129,8 @@ def home():
 
         
 #------------------------------- RECORDING
+
+# NOTE NEED TO MAKE SO THAT EATCH RECORDING IS INDEPENDENT TO EATCH USER
         elif request.form.get("startRecording"):
             setStartRecVar(True) # STARTS RECORDING (video.py)
             

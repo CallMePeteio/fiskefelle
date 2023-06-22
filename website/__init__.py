@@ -5,11 +5,100 @@ from flask_login import LoginManager
 from flask_caching import Cache
 from flask import Flask
 
+import threading
+import datetime
 import sqlite3
 import logging
 import smbus
+import numpy
+import json
+import time
 import sys
+import cv2
 import os
+
+
+def convertSecToHMS(seconds):
+    hours, remainder = divmod(seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    return "{:02}:{:02}:{:02}".format(int(hours), int(minutes), int(seconds))
+def readRecStartVar():
+    instanceDir = os.path.abspath("instance") # GETS THE FULL PATH OF THE INSTANCE DIRECTORY
+    recJsonPath = instanceDir + "/startRecord.json" # MAKES THE FULL PATH TO THE JOSN FILE
+
+
+    try: 
+        with open(recJsonPath) as f:
+            data = json.load(f)
+    except:
+        return None
+
+    return  data["startRec"]
+
+class RtspStream():
+    def __init__(self, rtspLink, res, fps, userId):
+        
+        self.rtspLink = rtspLink
+        self.res = res
+        self.fps = fps
+
+        self.userId = userId
+        self.frame = None
+
+        self.camera=cv2.VideoCapture(rtspLink)
+
+    def readFrame(self): 
+        while True:
+            success = False
+            while success == False:
+                success, self.frame = self.camera.read()
+
+
+    def recordVideo(self):
+        while True: 
+            time.sleep(1)
+            if readRecStartVar() == True:
+                currentTime = datetime.datetime.now().strftime("%d-%m-%Y_%H:%M:%S") # GETS THE CUREENT TIME IN (DAY,MONTH,YEAR HOUR-MINUTE-SECOND) FORMAT
+                name = str(currentTime) # CONVERTS THE DATETIME OBJECT TO A STRING, FOR NAME USAGE
+
+                recDir = os.path.abspath("website/recordings") # FINDS THE FULL PATH TO THE RECORDING DIR
+                recPath = os.path.join(recDir, name + ".avi") # APPENDS THE FILE NAME + THE .avi EXTENTION
+
+                writer = cv2.VideoWriter(recPath, cv2.VideoWriter_fourcc(*'XVID'), self.fps, self.res) # MAKES THE VIDEOWRITER OBJECT
+                startTime = time.time() # SETS TGE START TIME, TO CALCULATE THE TOTAL LENGTH OF THE VIDEO
+
+                logging.info("      Started recording!")
+                print(f"recordVideo called in thread {threading.get_ident()}")
+
+                prevFrame = self.frame
+                while readRecStartVar() == True or readRecStartVar() == None and int(time.time() - startTime) < 3600 * 2:
+                    if not numpy.array_equal(self.frame, prevFrame):
+                        prevFrame = self.frame
+                        writer.write(self.frame) # WRITES THE FRAME TO THE VIDEOWRITER OBJECT NOTE THE INPUT FPS MUST MATCH THE FPS OF THE CAMERA TO GET CORRECT LENGTH
+
+                with app.app_context(): # OPENS WITH APP CONTEXT TO ALLOW TO WRITE TO THE DB¨
+                    from .models import Videos
+                    elapsedTime = convertSecToHMS(int(time.time() - startTime)) # GETS THE ELAPSED TIME AND RETURNS A STRING IN (hr:min:sec) FORMAT
+                    video_ = Videos(userId=self.userId, fileName=name, duration=elapsedTime) # ADDS THE VIDEO INTO THE DB
+                    db.session.add(video_)
+                    db.session.commit()   
+
+                    writer.release() # CLOSES THE WRITER OBJECT (makes a new one when the user wants to record another video)
+                    logging.info("      Stopped recording!") 
+
+
+    def generateVideo(self):
+        prevFrame = self.frame
+
+        while True: 
+            if not numpy.array_equal(self.frame, prevFrame):
+                prevFrame = self.frame
+                ret, buffer = cv2.imencode(".jpg", self.frame)
+                byteArr=buffer.tobytes() # CONVERTS THE FRAME TO A BYTEARRAY
+
+                yield(b'--frame\r\n'
+                           b'Content-Type: image/jpeg\r\n\r\n' + byteArr + b'\r\n')
+
 
 global cache
 cache = None
@@ -29,6 +118,15 @@ loggingLevel = 20 # DEFINES THE LOGGING LEVEL
 logger = logging.getLogger() # MAKES THE LOGGING OBJECT
 logger.setLevel(loggingLevel) # SETS THE LEVEL AS DEFINED ABOVE
 logger = formatFont(logger)
+
+
+rtspLink = "rtsp://root:Troll2014!@192.168.1.21/axis-media/media.amp"
+stream = RtspStream(rtspLink, (1280, 720),  15,  1)
+threading.Thread(target=stream.readFrame, args=()).start()
+time.sleep(0.5)
+threading.Thread(target=stream.recordVideo, args=()).start()
+
+
 
 
 """
@@ -183,3 +281,4 @@ def getNameAndAdminCamera(cameraTable):
     
     else:
         return False
+
