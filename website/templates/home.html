@@ -291,24 +291,32 @@
           <!-- RECORDING BUTTONS -->
           <div class="col-md-3">
             <div style="padding-top: 10px;"></div>
-            <div class="card">
+            <div class="card shadow">
               <div class="card-header d-flex justify-content-between align-items-center">
                 Recording
                 <div class="indicator-container">
                   <span class="badge badge-{{ 'danger' if is_recording else 'primary' }}">{{ 'Recording' if is_recording else 'Not Recording' }}</span>
                 </div>
               </div>
-              
+            
               <div class="card-body">
                 <div class="list-group">
                   <form method="post" class="btnRequest">
                     <button class="btn btn-primary button" name="startRecording" value="startRecording">Start Recording</button>
                     <button class="btn btn-danger button" name="stopRecording" value="stopRecording">Stop Recording</button>
                   </form>
+                
+                  <!-- Added this div for displaying available size -->
+                  <div class="progress position-relative" id="progress-bar">
+                    <div class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="progress-bar-fill"></div>
+                    <div class="position-absolute w-100 h-100 d-flex align-items-center justify-content-center">
+                      <span class="used-space-text" id="used-space-text">Used Space: 0/0</span>
+                    </div>
+                  </div>                  
                 </div>
               </div>   
             </div>
-          </div>
+          </div>     
       </div>
 
 
@@ -320,4 +328,39 @@
 </div>
 
 <div style="padding-top: 70vh"></div>
+{% endblock %}
+ 
+
+
+{% block javascript %}
+  <script>
+    // Pass the value of is_recording from Flask to JavaScript
+    var isRecording = {{ is_recording|tojson }};
+
+    // Function to fetch data from the API and update the progress bar and text
+    function updateProgressBar() {
+      fetch('/usedVidSpace')
+        .then(response => response.json())
+        .then(data => {
+          // Calculate the percentage of used space
+          var percentage = (data.usedSpace / data.maxSpace) * 100;
+
+          // Update the progress bar
+          var progressBarFill = document.getElementById('progress-bar-fill');
+          progressBarFill.style.width = percentage + '%';
+          progressBarFill.setAttribute('aria-valuenow', percentage);
+
+          // Update the text
+          var usedSpaceText = document.getElementById('used-space-text');
+          usedSpaceText.innerText = `Used Space: ${data.usedSpace}/${data.maxSpace}gb`;
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    // Conditionally call the function based on the value of is_recording
+    updateProgressBar()
+    if (isRecording) {
+      setInterval(updateProgressBar, 15000);
+    }
+  </script>
 {% endblock %}

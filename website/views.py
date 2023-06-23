@@ -11,10 +11,14 @@ from .models import Camera
 from .models import User
 from .models import Gate
 from .models import Log
-from .relay import Relay
+
+
+from . import maxRecordSizeGB
+from . import getDirSize
 from . import pathToDB
 from . import logging 
 from . import cache
+from . import relay
 from . import db
 import sqlite3
 import json
@@ -24,7 +28,7 @@ import os
 
 
 
-relay = Relay(i2cAdress=0x20, initialState=[0,0,0,0,0,0]) # MAKES THE RELAY OBJECT, FOR CONTROLLING THE RELAY HAT
+
 views = Blueprint('views', __name__) # MAKES THE BLUPRINT OBJECT
 
 
@@ -132,9 +136,16 @@ def home():
 
 # NOTE NEED TO MAKE SO THAT EATCH RECORDING IS INDEPENDENT TO EATCH USER
         elif request.form.get("startRecording"):
-            setStartRecVar(True) # STARTS RECORDING (video.py)
+            recDir = os.path.abspath("website/recordings") # FINDS THE FULL PATH TO THE RECORDING DIR
+            recDirSize = getDirSize(recDir) # GETS THE SIZE OF ALL OF THE ITEMS IN THE DIRECTORY IN GB
+            if recDirSize <= maxRecordSizeGB:
+                setStartRecVar(True) # STARTS RECORDING (video.py)
+            else:
+                setStartRecVar(False) # MAKES SURE THAT THERE ISNT ANY RECORDING RUNNING STOPS RECORDING (video.py)
+                flash(f"There is not enough space to start another video, used size: {recDirSize}gb/{maxRecordSizeGB}gb", category='error')
             
         elif request.form.get("stopRecording"):
+
             setStartRecVar(False) # STOPS RECORDING (video.py)
             time.sleep(0.5)
                    

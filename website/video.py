@@ -13,7 +13,10 @@ from flask import jsonify
 
 from .models import Videos
 
+from . import readRecStartVar
+from . import maxRecordSizeGB
 from . import selectFromDB
+from . import getDirSize
 from . import pathToDB
 from . import logging
 from . import stream
@@ -85,7 +88,7 @@ def videoTable():
 
 
     videoItems = selectFromDB(dbPath=pathToDB, table="videos") # GETS ALL OF THE DATA FROM THE TABLE "videos"
-    return render_template("video.html", videoItems=videoItems, user=current_user, isAdmin=session.get("isAdmin", False))
+    return render_template("video.html", videoItems=videoItems, user=current_user, isAdmin=session.get("isAdmin", False), is_recording=readRecStartVar())
 
 
 @video.route("/rtspStream", methods=["POST","GET"])      
@@ -120,7 +123,13 @@ def getTemperature():
     return jsonify({'temperature': temperatureValue})
 
 
+@video.route("/usedVidSpace", methods=["GET"])
+@login_required
+def getUsedVidSpace():
+    recDir = os.path.abspath("website/recordings") # FINDS THE FULL PATH TO THE RECORDING DIR
+    recDirSize = getDirSize(recDir)
 
+    return jsonify({"usedSpace": recDirSize, "maxSpace": maxRecordSizeGB})
 
 
 

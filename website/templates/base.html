@@ -54,14 +54,12 @@
         </ul>
       
         <!-- Separated ul element -->
-        <ul class="navbar-nav ml-auto">
-               
+        <ul class="navbar-nav ml-auto">      
           {% if user.is_authenticated %}
             <li class="nav-item">
               <div class="nav-link" id="temperatureDisplay" style="cursor: default;">Loading temperature...</div>
             </li>
           {% endif %}
-        
         </ul>
       
       </div>
@@ -106,36 +104,27 @@
       crossorigin="anonymous"
     ></script>
 
-{% block javascript %}
-    <script type="text/javascript">
-      function deleteNote(noteId) {
-  fetch("/delete-note", {
-    method: "POST",
-    body: JSON.stringify({ noteId: noteId }),
-  }).then((_res) => {
-    window.location.href = "/";
-  });
-  }
-</script>
+    <!-- UPDATE TEMPERATRUE CODE -->
+    <script>
+      document.addEventListener('DOMContentLoaded', (event) => {
+          function fetchTemperature() {
+              fetch('/temperature') 
+                  .then(response => response.json())
+                  .then(data => {
+                      document.getElementById('temperatureDisplay').innerText = 'Temperature: ' + data.temperature + '°C';
+                  })
+                  .catch(error => console.error('Error:', error));
+          }
+        
+          // Call fetchTemperature immediately
+          fetchTemperature();
+        
+          // Set interval to call fetchTemperature every 5 seconds
+          setInterval(fetchTemperature, 5000);
+      });
+    </script>
 
-<script>
-  function fetchTemperature() {
-      // replace 'http://your_flask_app.com' with your actual flask app url
-      fetch('http://192.168.1.10:3389/temperature') 
-          .then(response => response.json())
-          .then(data => {
-              document.getElementById('temperatureDisplay').innerText = 'Temperature: ' + data.temperature + '°C';
-          })
-          .catch(error => console.error('Error:', error));
-  }
-
-  // Call fetchTemperature immediately
-  fetchTemperature();
-
-  // Set interval to call fetchTemperature every second
-  setInterval(fetchTemperature, 5000);
-</script>
-
-{% endblock %}
+    {% block javascript %}
+    {% endblock %}
   </body>
 </html>

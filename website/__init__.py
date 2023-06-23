@@ -5,10 +5,13 @@ from flask_login import LoginManager
 from flask_caching import Cache
 from flask import Flask
 
+from .relay import switchFan
+from .relay import Relay
+
 import threading
 import datetime
 import sqlite3
-import logging
+import logging  
 import smbus
 import numpy
 import json
@@ -121,10 +124,14 @@ logger = formatFont(logger)
 
 
 rtspLink = "rtsp://root:Troll2014!@192.168.1.21/axis-media/media.amp"
-stream = RtspStream(rtspLink, (1280, 720),  15,  1)
+stream = RtspStream(rtspLink, (1280, 720),  10,  1)
 threading.Thread(target=stream.readFrame, args=()).start()
 time.sleep(0.5)
 threading.Thread(target=stream.recordVideo, args=()).start()
+
+relay = Relay(i2cAdress=0x20, initialState=[0,0,0,0,0,0]) # MAKES THE RELAY OBJECT, FOR CONTROLLING THE RELAY HAT
+threading.Thread(target=switchFan, args=(1, 65, 75, 5)).start()
+maxRecordSizeGB = 100
 
 
 
@@ -282,3 +289,15 @@ def getNameAndAdminCamera(cameraTable):
     else:
         return False
 
+def getDirSize(start_path = '.'):
+    total_size = 0
+    for dirpath, dirnames, filenames in os.walk(start_path):
+        for f in filenames:
+            fp = os.path.join(dirpath, f)
+            # skip if it is symbolic link
+            if not os.path.islink(fp):
+                total_size += os.path.getsize(fp)
+
+
+    size_in_gb = round(total_size / 1073741824, 2)  # Convert bytes to gigabytes
+    return size_in_gb

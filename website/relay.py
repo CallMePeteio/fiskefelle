@@ -1,13 +1,15 @@
 
 
 
-
+import subprocess
 import smbus 
+import time
+import re
 
 
 
 """
-_________________________ Relay _________________________
+________________    _________ Relay _________________________
 This class is for controling the 6ch relay board hat that is on the raspberry pi
 link to board documentation: https://www.osaelectronics.com/learn/tutorials/6-channel-relay-board-quick-start-guide/
 
@@ -59,6 +61,42 @@ class Relay():
     def updateRelayState(self, value, index):
         self.relayState[index] = value # CHANGES THE REQUESTED INDEX TO THE REQUESTED VALUE
         self.switchRelay() # SWITCHES THE RELAYS TO THE REQUESTED POSITION
+
+
+
+
+
+
+
+"""
+_______________________ switchFan _______________________
+This function is called in a thread in __init__.py
+It is used to switch one of the relays, that is connected to a fan
+
+"""
+def switchFan(relayNum, thresholdMin, thresholdMax, checkInterval):
+    time.sleep(5)
+    from . import relay # IMPORTS THE RELAY OBJECT HERE TO STOP CIRCULAR IMPORT
+    switchedOff = False
+    reatchedThreshold = False
+    while True:
+        process = subprocess.Popen(['vcgencmd', 'measure_temp'], stdout=subprocess.PIPE) # RUNS A SUBPROCCES THAT CHECKS THE CORE TEMPERATURE
+        output, _error = process.communicate() # GETS THE OUTPUT
+        temperature = output.decode('UTF-8') # DECODS IT IN UTF8 AS A STRING
+        temperature = int(re.search(r'\d+', temperature).group()) # FINDS THE INTGER IN THE STRING
+
+        if temperature >= thresholdMax and reatchedThreshold == False:
+            relay.updateRelayState(1, relayNum) # SWITCHES THE RELAY ON
+            reatchedThreshold = True # SETS THE REATCHED THRESHOLD VARIABLE TO TRUE, SO THE RELAY DOSENT SWITCH CONSTANTLY
+            switchedOff = False # SETS THE SWITCHED OF TO FALSE, BECAUSE THE RELAY SHULD BE ABLE TO BE SWITCHED OFF
+
+        if temperature <= thresholdMin and switchedOff == False: # IF THE MINIMUM THRESHOLD IS GRATER THAN THE CURRENT TEMPERATURE AND THE RELAY HASNT BEEN SWITCHED OFF BEFORE
+            relay.updateRelayState(0, relayNum) # SWITCHES THE RELAY OFF
+            switchedOff = True # SETS IT SO THE RELAY ONLY GETS SWITCHED OFF ONCE
+            reatchedThreshold = False # OPENS THE RELAY TO STOP THE FAN 
+
+        time.sleep(checkInterval)
+
 
 
 
