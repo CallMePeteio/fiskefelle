@@ -4,6 +4,7 @@ from flask_login import current_user
 
 from flask import send_from_directory
 from flask import render_template
+from flask import current_app
 from flask import Blueprint
 from flask import Response
 from flask import session
@@ -66,23 +67,21 @@ def videoTable():
         if request.form.get("downloadVideoId"):
             pass
 
-        elif request.form.get("deleteVideoId"):
-
-            videoName = request.form.get("deleteVideoName") # GETS THE VIDEO NAME 
+        if request.form.get("deleteVideoId"):
+            videoName = request.form.get("deleteVideoName") # GETS THE VIDEO NAME
             recordingDir = os.path.abspath("website/recordings") # GETS THE FULL RECORDING PATH
             recordingsFile = os.path.join(recordingDir, videoName + ".avi") # ADDS THE VIDEO NAME TO THE RECORDING PATH
 
             if os.path.exists(recordingsFile): # CHECKS IF THE FILE EXISTS
-                  os.remove(recordingsFile) # DELETES THE FILE
+                os.remove(recordingsFile) # DELETES THE FILE
             else:
-                  logging.critical(f"     Couldnt find the specified avi file to delete: {recordingsFile}")
+                logging.critical(f"     Couldn't find the specified avi file to delete: {recordingsFile}")
 
-            con = sqlite3.connect(pathToDB) # CONNECTS TO THE DB
-            cursor = con.cursor() # SETS THE CURSOR
-            cursor.execute("DELETE FROM 'videos' WHERE id=?", (request.form.get("deleteVideoId"),)) # DELETES THE ROW THAT HAS BEEN PRESSED RELEASED ON
-            con.commit() # COMMITS TO THE ACTION
-            con.close()
-
+            video_id = request.form.get("deleteVideoId")
+            video = Videos.query.get(video_id) # get the Video object using the id
+            if video:
+                db.session.delete(video) # delete the Video object
+                db.session.commit() # commit the transaction
   
 
 

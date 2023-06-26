@@ -39,7 +39,7 @@ def readRecStartVar():
     return  data["startRec"]
 
 class RtspStream():
-    def __init__(self, rtspLink, res, fps, userId):
+    def __init__(self, db, rtspLink, res, fps, userId):
         
         self.rtspLink = rtspLink
         self.res = res
@@ -47,6 +47,8 @@ class RtspStream():
 
         self.userId = userId
         self.frame = None
+
+        self.db = db
 
         self.camera=cv2.VideoCapture(rtspLink)
 
@@ -74,7 +76,7 @@ class RtspStream():
                 print(f"recordVideo called in thread {threading.get_ident()}")
 
                 prevFrame = self.frame
-                while readRecStartVar() == True or readRecStartVar() == None and int(time.time() - startTime) < 3600 * 2:
+                while readRecStartVar() == True or readRecStartVar() == None and int(time.time() - startTime) < 3600 * 100:
                     if not numpy.array_equal(self.frame, prevFrame):
                         prevFrame = self.frame
                         writer.write(self.frame) # WRITES THE FRAME TO THE VIDEOWRITER OBJECT NOTE THE INPUT FPS MUST MATCH THE FPS OF THE CAMERA TO GET CORRECT LENGTH
@@ -83,8 +85,8 @@ class RtspStream():
                     from .models import Videos
                     elapsedTime = convertSecToHMS(int(time.time() - startTime)) # GETS THE ELAPSED TIME AND RETURNS A STRING IN (hr:min:sec) FORMAT
                     video_ = Videos(userId=self.userId, fileName=name, duration=elapsedTime) # ADDS THE VIDEO INTO THE DB
-                    db.session.add(video_)
-                    db.session.commit()   
+                    self.db.session.add(video_)
+                    self.db.session.commit()   
 
                     writer.release() # CLOSES THE WRITER OBJECT (makes a new one when the user wants to record another video)
                     logging.info("      Stopped recording!") 
@@ -124,14 +126,14 @@ logger = formatFont(logger)
 
 
 rtspLink = "rtsp://root:Troll2014!@192.168.1.21/axis-media/media.amp"
-stream = RtspStream(rtspLink, (1280, 720),  10,  1)
+stream = RtspStream(db, rtspLink, (1280, 720),  8,  1)
 threading.Thread(target=stream.readFrame, args=()).start()
 time.sleep(0.5)
 threading.Thread(target=stream.recordVideo, args=()).start()
 
 relay = Relay(i2cAdress=0x20, initialState=[0,0,0,0,0,0]) # MAKES THE RELAY OBJECT, FOR CONTROLLING THE RELAY HAT
-threading.Thread(target=switchFan, args=(1, 65, 75, 5)).start()
-maxRecordSizeGB = 100
+threading.Thread(target=switchFan, args=(2, 50, 75, 5)).start()
+maxRecordSizeGB = 200
 
 
 
