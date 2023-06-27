@@ -3,10 +3,7 @@ from flask_login import login_required, current_user
 from werkzeug.security import generate_password_hash
 
 from ..services.dbService import selectFromDB
-from ..services.rtsp import readRecStartVar
 from ..services.rtsp import getDirSize
-
-from .. import getNameAndAdminCamera
 
 from ..models import FiskeFelle
 from ..models import Camera
@@ -14,9 +11,7 @@ from ..models import User
 from ..models import Gate
 from ..models import Log
 
-
-from .. import maxRecordSizeGB
-from .. import pathToDB
+from .. import config
 from .. import logging 
 from .. import cache
 #from . import relay
@@ -113,13 +108,13 @@ def checkValidDeleteId(id):
 
 
 def setCameraCache():
-    session['cameraTable'] = selectFromDB(pathToDB, "camera", log=False) # SETS THE CASHE VARIABLE TO ALL OF THE CAMERA ROWS FROM THE CAMERA TABLE
+    session['cameraTable'] = selectFromDB(config.pathToDB, "camera", log=False) # SETS THE CASHE VARIABLE TO ALL OF THE CAMERA ROWS FROM THE CAMERA TABLE
 def setFiskefelleCache(): 
-    session['fiskefelleTable'] = selectFromDB(pathToDB, "fiskefelle", log=False) # SETS THE CASHE VARIABLE TO ALL OF THE CAMERA ROWS FROM THE CAMERA TABLE
+    session['fiskefelleTable'] = selectFromDB(config.pathToDB, "fiskefelle", log=False) # SETS THE CASHE VARIABLE TO ALL OF THE CAMERA ROWS FROM THE CAMERA TABLE
 def setGateCache(): 
-    session["gateTable"] = selectFromDB(pathToDB, "gate", log=False)            
+    session["gateTable"] = selectFromDB(config.pathToDB, "gate", log=False)            
 def setUserCache(): 
-    session["userTable"] = selectFromDB(pathToDB, "user", log=False) # UPDATES THE USER CACHE
+    session["userTable"] = selectFromDB(config.pathToDB, "user", log=False) # UPDATES THE USER CACHE
     
 @settings.route("/settings", methods=["GET", "POST"])
 @login_required
@@ -145,7 +140,7 @@ def settings_():
             userId = request.form.get("deleteUser")
             
             if checkValidDeleteId(userId) == True: 
-                con = sqlite3.connect(pathToDB) # CONNECTS TO THE DB
+                con = sqlite3.connect(config.pathToDB) # CONNECTS TO THE DB
                 cursor = con.cursor() # SETS THE CURSOR
                 cursor.execute("DELETE FROM 'user' WHERE id=?", (userId,)) # DELETES THE ROW THAT HAS BEEN PRESSED RELEASED ON
                 con.commit() # COMMITS TO THE ACTION
@@ -179,7 +174,7 @@ def settings_():
         elif request.form.get("deleteCamId"): # IF SOMEONE PRESSED THE DELETE CAM BUTTON
             camId = request.form.get("deleteCamId") # GETS THE ID OF THE BUTTON (SAME ID AS IN THE DATABACE)
 
-            con = sqlite3.connect(pathToDB) # CONNECTS TO THE DB
+            con = sqlite3.connect(config.pathToDB) # CONNECTS TO THE DB
             cursor = con.cursor() # SETS THE CURSOR
             cursor.execute("DELETE FROM 'camera' WHERE id=?", (camId,)) # DELETES THE ROW THAT HAS BEEN PRESSED RELEASED ON
             con.commit() # COMMITS TO THE ACTION
@@ -207,7 +202,7 @@ def settings_():
         elif request.form.get("deleteGateId"): # IF SOMEONE PRESSED THE DELETE CAM BUTTON
             gateId = request.form.get("deleteGateId") # GETS THE ID OF THE BUTTON (SAME ID AS IN THE DATABACE)
 
-            con = sqlite3.connect(pathToDB) # CONNECTS TO THE DB
+            con = sqlite3.connect(config.pathToDB) # CONNECTS TO THE DB
             cursor = con.cursor() # SETS THE CURSOR
             cursor.execute("DELETE FROM 'gate' WHERE id=?", (gateId,)) # DELETES THE ROW THAT HAS BEEN PRESSED RELEASED ON
             con.commit() # COMMITS TO THE ACTION
@@ -234,7 +229,7 @@ def settings_():
         elif request.form.get("deleteFiskefelleId"):
             fiskefelleId = request.form.get("deleteFiskefelleId") # GETS THE ID OF THE FISKELLE THAT WAS DELETED (trash can button)
 
-            con = sqlite3.connect(pathToDB) # CONNECTS TO THE DB
+            con = sqlite3.connect(config.pathToDB) # CONNECTS TO THE DB
             cursor = con.cursor() # SETS THE CURSOR
             cursor.execute("DELETE FROM 'fiskefelle' WHERE id=?", (fiskefelleId,)) # DELETES THE ROW THAT HAS BEEN PRESSED RELEASED ON
             cursor.execute("DELETE FROM 'camera' WHERE fiskeFelleid=?", (fiskefelleId,)) # DELEATS THE CAMERAS THAT HAS BEEN ATTATCHED TO THE FISKEFELLE
@@ -253,4 +248,5 @@ def settings_():
     else: 
         fiskefelleIdToName = None
 
-    return render_template("settings.html", user=current_user, isAdmin=session.get("isAdmin", False), cameraName=getNameAndAdminCamera(session.get("cameraTable", False)), cameraData=session.get("cameraTable", False), fiskefelleData=session.get("fiskefelleTable", False), fiskefelleIdToName=fiskefelleIdToName, gateData=session.get("gateTable", False), userData=session.get("userTable", False))
+    return render_template("settings.html", user=current_user, isAdmin=session.get("isAdmin", False), cameraData=session.get("cameraTable", False), fiskefelleData=session.get("fiskefelleTable", False), fiskefelleIdToName=fiskefelleIdToName, gateData=session.get("gateTable", False), userData=session.get("userTable", False))
+   

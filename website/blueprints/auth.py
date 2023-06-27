@@ -9,7 +9,7 @@ from ..services.dbService import selectFromDB
 
 from ..models import User
 
-from .. import pathToDB
+from .. import config
 from .. import db 
 
 
@@ -30,20 +30,20 @@ def login():
                 flash('Logged in successfully!', category='success') # FLASHES THE INPUT MESSAGE
                 login_user(user, remember=True) # LOGS IN THE USER
 
-                isAdmin = selectFromDB(pathToDB, "user", ["WHERE"], ["id"], [current_user.id], log=True)
+                isAdmin = selectFromDB(config.pathToDB, "user", ["WHERE"], ["id"], [current_user.id], log=True)
                 if isAdmin[0][len(isAdmin[0]) -1] == 1:
                     session["isAdmin"] = True # SETS THE USER AS ADMIN
                 else:
                     session["isAdmin"] = False # SETS THE USER AS USER
 
-                camTable = selectFromDB(pathToDB, "camera", ["WHERE"], log=False) # GETS ALL OF THE ROWS FROM THE "camera" TABLE
-                fiskefeleTable = selectFromDB(pathToDB, "fiskefelle", ["WHERE"], log=False) # GETS ALL OF THE ROWS FROM THE "camera" TABLE
-                gateTable = selectFromDB(pathToDB, "gate", ["WHERE"], log=False)
+                camTable = selectFromDB(config.pathToDB, "camera", ["WHERE"], log=False) # GETS ALL OF THE ROWS FROM THE "camera" TABLE
+                fiskefeleTable = selectFromDB(config.pathToDB, "fiskefelle", ["WHERE"], log=False) # GETS ALL OF THE ROWS FROM THE "camera" TABLE
+                gateTable = selectFromDB(config.pathToDB, "gate", ["WHERE"], log=False)
                 
                 session["gateTable"] = gateTable  # SETS THE RECIVE DATA TO A GLOBAL VARIABLE, IM USING THIS TO CASH THE TABLE "gateTable", SO I DONT HAFT TO READ FORM THE DB EVRYTIME I MAKE A REQUEST
                 session['cameraTable'] = camTable # SETS THE RECIVE DATA TO A GLOBAL VARIABLE, IM USING THIS TO CASH THE TABLE "cameras", SO I DONT HAFT TO READ FORM THE DB EVRYTIME I MAKE A REQUEST
                 session["fiskefelleTable"] = fiskefeleTable # SETS THE RECIVE DATA TO A GLOBAL VARIABLE, IM USING THIS TO CASH THE TABLE "fiskefelle", SO I DONT HAFT TO READ FORM THE DB EVRYTIME I MAKE A REQUEST
-                session["userTable"] = selectFromDB(pathToDB, "user", log=False) # UPDATES THE USER CACHE
+                session["userTable"] = selectFromDB(config.pathToDB, "user", log=False) # UPDATES THE USER CACHE
                 session["startRec"] = False # SETS THE DEFAULT VALUE IF YOU SHULD START RECORDING (DONT RECORD)
                 
                 return redirect("/") # REDIRECTS THE USER TO HOME

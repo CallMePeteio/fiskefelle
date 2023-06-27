@@ -1,7 +1,7 @@
 from ..services.dbService import addVideo
 from threading import Event
 
-from .. import recordingsFolder
+from .. import config
 from .. import app
 from .. import db
 
@@ -28,26 +28,6 @@ def convertSecToHMS(seconds):
 
 
 """
-___________________________________ readRecStartVar ___________________________________
-This function reads the start variable in "instance/startRecord.json". 
-The varaible determens if i shuld keep/start recording
-
-"""
-def readRecStartVar():
-    instanceDir = os.path.abspath("instance") # GETS THE FULL PATH OF THE INSTANCE DIRECTORY
-    recJsonPath = instanceDir + "/startRecord.json" # MAKES THE FULL PATH TO THE JOSN FILE
-
-
-    try:  # IT IS IN A TRY/EXCEPT STATMENT, BECAUSE SOMETIMES IS THERE A PROBLEM THAT SOMEONE ELSE IS READING/WRITING TO THE JSON FILE, CAUSING AN ERROR
-        with open(recJsonPath) as f: # OPENS THE JSON FILE
-            data = json.load(f) # LOADS THE DATA
-    except:
-        return None # RETURNS NONE IF ERROR
-
-    return  data["startRec"] # RETURNS THE STARTREC VALUE (True or False)
-
-
-"""
 ______________________________________ getDirSize _____________________________________
 This function gets the file size inside a certian directory.
 It returns an integer that is the size of the element sin the dir in GB
@@ -68,8 +48,8 @@ def getDirSize(start_path = '.'):
     return size_in_gb
 
 
-def startRtspStream(rtspLink, app, logger):
-    stream = RtspStream(db, app, logger, rtspLink, (1280, 720),  10,  1, recordingsFolder)
+def startRtspStream(db, app, logger, rtspLink, res, fps, userId, recordingsFolder):
+    stream = RtspStream(db, app, logger, rtspLink, res,  fps,  userId, recordingsFolder)
     threading.Thread(target=stream.readFrame, args=()).start()
     time.sleep(0.5)
     threading.Thread(target=stream.recordVideo, args=()).start()
@@ -108,7 +88,7 @@ class RtspStream():
         while True: # LOOPS INFINATLY
             time.sleep(1)
             if self.startRecoring: # CHECKS IF THE USER WANTS TO START RECORDING
-                currentTime = datetime.datetime.now().strftime("%d-%m-%Y_%H:%M:%S") # GETS THE CUREENT TIME IN (DAY,MONTH,YEAR HOUR-MINUTE-SECOND) FORMAT
+                currentTime = datetime.datetime.now().strftime(config.videoTimeFormat) # GETS THE CUREENT TIME IN (DAY,MONTH,YEAR HOUR-MINUTE-SECOND) FORMAT
                 name = str(currentTime) # CONVERTS THE DATETIME OBJECT TO A STRING, FOR NAME USAGE
 
                 recDir = os.path.abspath(self.recordingsFolder) # FINDS THE FULL PATH TO THE RECORDING DIR

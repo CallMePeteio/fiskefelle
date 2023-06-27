@@ -8,6 +8,8 @@ from flask import Flask
 from .services.relay import switchFan
 from .services.relay import Relay
 
+from . import config
+
 import threading
 import datetime
 import sqlite3
@@ -27,29 +29,17 @@ global cache
 cache = None
 
 db = SQLAlchemy()
-DB_NAME = "database.db"
-pathToDataStorage = "/home/pi/fiskefelle/instance/"
-pathToDB = pathToDataStorage + DB_NAME
-
-recordingsFolder = "website/static/recordings"
 
 
-"""
-Level: NOTSET > DEBUG > INFO > WARNING > ERROR > CRITICAL
-Value:   0    >  10   >  20  >    30   >  40   >  50
-"""
 from .services.loggingFont import formatFont
-loggingLevel = 20 # DEFINES THE LOGGING LEVEL
 logger = logging.getLogger() # MAKES THE LOGGING OBJECT
-logger.setLevel(loggingLevel) # SETS THE LEVEL AS DEFINED ABOVE
+logger.setLevel(config.loggingLevel) # SETS THE LEVEL AS DEFINED ABOVE
 logger = formatFont(logger)
 
 
 
 #relay = Relay(i2cAdress=0x20, initialState=[0,0,0,0,0,0]) # MAKES THE RELAY OBJECT, FOR CONTROLLING THE RELAY HAT
 #threading.Thread(target=switchFan, args=(2, 50, 75, 5)).start()
-maxRecordSizeGB = 200
-
 
 
 
@@ -71,7 +61,7 @@ def create_app():
 
     app = Flask(__name__) # Creates an instance of Flask application with the given name
     app.config['SECRET_KEY'] = 'hjshjhdjah kjshkjdhjs' # Sets the secret key used for signing session cookies
-    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_NAME}' # Sets the URI of the SQLite database
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{config.dbName}' # Sets the URI of the SQLite database
     app.config['CACHE_TYPE'] = 'simple'  # You can also use 'redis', 'memcached', or other cache types
 
     db.init_app(app) # Initializes the SQLAlchemy database instance with the Flask app instance
@@ -106,11 +96,9 @@ def create_app():
         return User.query.get(int(id)) # Defines a callback function to load a user from the database
 
     from .services.rtsp import startRtspStream
-    app.stream = startRtspStream("rtsp://admin:Troll2014@192.168.1.20:554", app, logging)
+    app.stream = startRtspStream(db, app, logging, config.rtspLink, config.resolution, config.framesPerSecond, config.userId_, config.recordingsFolder)
 
     return app # Returns the Flask app instance
-
-
 
 
 
@@ -120,30 +108,11 @@ def create_app():
 ___________________________________ create_database ___________________________________
 This function creates a database if it does not exist.
 
-Inputs:
-app: A Flask app instance.
-
-Returns:
-None.
 """
 def create_database(app):
     if not path.exists('website/' + DB_NAME):
         db.create_all(app=app) # Creates all tables in the database
         print('Created Database!') # Prints a message indicating that the database has been created.
 
-
-
-
-
-def getNameAndAdminCamera(cameraTable): 
-
-    rtnList = []
-    if cameraTable != False and cameraTable != None:
-        for row in cameraTable:
-            rtnList.append((row[2], row[4]))
-        return [rtnList, len(rtnList)] # returns the list and if admin can watch it: [('Trollfjrord', 1), ('Bælevåg', 0), ('Bodø', 1), ('Bodø', 0), ('Breivika', 0), ('Stavanger', 0)], only admin can view "Trollfjrord" and "Bodø"
-    
-    else:
-        return False
 
 

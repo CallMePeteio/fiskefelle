@@ -10,13 +10,10 @@ from flask import request
 from flask import session
 
 from ..services.dbService import selectFromDB
-from ..services.rtsp import readRecStartVar
 from ..services.rtsp import getDirSize
 
-from .. import getNameAndAdminCamera
-from .. import maxRecordSizeGB
-from .. import pathToDB
 from .. import logging 
+from .. import config
 from .. import cache
 from .. import db
 
@@ -32,13 +29,13 @@ def logAction(userId, openDoor, turnLights):
     db.session.commit()
 def getDefaultFiskefelle(): 
     
-    defaultFiskefelle = selectFromDB(dbPath=pathToDB, table="fiskefelle")
+    defaultFiskefelle = selectFromDB(dbPath=config.pathToDB, table="fiskefelle")
     if defaultFiskefelle != None:
         return defaultFiskefelle[0]
     return None
 def getDefaultIp(fiskefelleId):
     camIp = None
-    camIp = selectFromDB(dbPath=pathToDB, table="camera", argumentList=["WHERE"], columnList=["fiskeFelleId"], valueList=str(fiskefelleId)) # GETS THE CAMERA IP 
+    camIp = selectFromDB(dbPath=config.pathToDB, table="camera", argumentList=["WHERE"], columnList=["fiskeFelleId"], valueList=str(fiskefelleId)) # GETS THE CAMERA IP 
 
     if camIp != None: 
         camIp = camIp[0][5]
@@ -120,7 +117,7 @@ def home_():
             
         elif request.form.get("camera"): # IF SOMEONE WANTS TO CHANGE THE CAMERA
             camId = request.form.get("camera") # GETS THE ID OF THE CAMERA THEY WANT TO CHANGE TO
-            camRow = selectFromDB(dbPath=pathToDB, table="camera", argumentList=["WHERE"], columnList=["id"], valueList=camId) # GETS THE ROW OF THE CAMERA THEY WANT TO VIEW
+            camRow = selectFromDB(dbPath=config.pathToDB, table="camera", argumentList=["WHERE"], columnList=["id"], valueList=camId) # GETS THE ROW OF THE CAMERA THEY WANT TO VIEW
             camIp = camRow[0][5] # FINDS THE IP
             page_cam_ips[page_uuid] = camIp # UPDATES THE UUID LINK
             logging.info(f"     Showing camera with id: {camRow[0][0]}") # LOGS THE ACTION
@@ -134,12 +131,12 @@ def home_():
             recDir = os.path.abspath("website/recordings") # FINDS THE FULL PATH TO THE RECORDING DIR
             recDirSize = getDirSize(recDir) # GETS THE SIZE OF ALL OF THE ITEMS IN THE DIRECTORY IN GB
             
-            if recDirSize <= maxRecordSizeGB:
+            if recDirSize <= config.maxRecordSizeGB:
                 current_app.stream.startRecoring = True
             else:
                 current_app.stream.startRecoring = False
                 
-                flash(f"There is not enough space to start another video, used size: {recDirSize}gb/{maxRecordSizeGB}gb", category='error')
+                flash(f"There is not enough space to start another video, used size: {recDirSize}gb/{config.maxRecordSizeGB}gb", category='error')
             
         elif request.form.get("stopRecording"):
             current_app.stream.startRecoring = False
@@ -149,13 +146,13 @@ def home_():
     cache.set('pageDefaultFiskefelle', pageDefaultFiskefelle)
 
     session["selectedCamIp"] = camIp
-    selectedCamera = selectFromDB(dbPath=pathToDB, table="camera", argumentList=["WHERE"], columnList=["ipAdress"], valueList=[session["selectedCamIp"]])
+    selectedCamera = selectFromDB(dbPath=config.pathToDB, table="camera", argumentList=["WHERE"], columnList=["ipAdress"], valueList=[session["selectedCamIp"]])
     if selectedCamera != None:
         isRtsp=selectedCamera[0][3]
     else:
         isRtsp = None
 
 
-
-    return render_template("home.html", user=current_user, isAdmin=session.get("isAdmin", False), cameraName=getNameAndAdminCamera(session.get("cameraTable", False)), cameraData=session.get("cameraTable", False), camIp=camIp, fiskefelleId=fiskefelleId, page_uuid=page_uuid, fiskefelleData=session.get("fiskefelleTable", False), gateData=session.get("gateTable", False), isRtsp=isRtsp)
+   
+    return render_template("home.html", user=current_user, isAdmin=session.get("isAdmin", False), cameraData=session.get("cameraTable", False), camIp=camIp, fiskefelleId=fiskefelleId, page_uuid=page_uuid, fiskefelleData=session.get("fiskefelleTable", False), gateData=session.get("gateTable", False), isRtsp=isRtsp, is_recording=current_app.stream.startRecoring)
 

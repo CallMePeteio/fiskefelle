@@ -8,8 +8,7 @@ from werkzeug.security import generate_password_hash
 
 from ..services.rtsp import getDirSize
 
-from .. import recordingsFolder
-from .. import maxRecordSizeGB
+from .. import config 
 
 import subprocess
 import os
@@ -43,14 +42,14 @@ def getTemperature():
 
 @api.route("video/download/<name>")
 def downloadVideo(name):
-    recordings_dir = os.path.abspath(recordingsFolder)
+    recordings_dir = os.path.abspath(config.recordingsFolder)
     return send_from_directory(recordings_dir, name + ".avi", as_attachment=True)
 
 
 @api.route("/usedVidSpace", methods=["GET"])
 @login_required
 def getUsedVidSpace():
-    recDir = os.path.abspath(recordingsFolder) # FINDS THE FULL PATH TO THE RECORDING DIR
+    recDir = os.path.abspath(config.recordingsFolder) # FINDS THE FULL PATH TO THE RECORDING DIR
     recDirSize = getDirSize(recDir)
 
-    return jsonify({"usedSpace": recDirSize, "maxSpace": maxRecordSizeGB})
+    return jsonify({"usedSpace": recDirSize, "maxSpace": config.maxRecordSizeGB})

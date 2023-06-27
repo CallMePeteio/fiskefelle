@@ -12,14 +12,11 @@ from flask import request
 from flask import jsonify
 
 from ..services.dbService import selectFromDB
-from ..services.rtsp import readRecStartVar
 from ..services.rtsp import getDirSize
 from ..models import Videos
 
-from .. import recordingsFolder
-from .. import maxRecordSizeGB 
-from .. import pathToDB
 from .. import logging
+from .. import config 
 from .. import app
 from .. import db
 
@@ -46,7 +43,7 @@ def videoTable():
 
         if request.form.get("deleteVideoId"):
             videoName = request.form.get("deleteVideoName") # GETS THE VIDEO NAME
-            recordingDir = os.path.abspath(recordingsFolder) # GETS THE FULL RECORDING PATH
+            recordingDir = os.path.abspath(config.recordingsFolder) # GETS THE FULL RECORDING PATH
             recordingsFile = os.path.join(recordingDir, videoName + ".avi") # ADDS THE VIDEO NAME TO THE RECORDING PATH
 
             if os.path.exists(recordingsFile): # CHECKS IF THE FILE EXISTS
@@ -63,7 +60,7 @@ def videoTable():
 
 
 
-    videoItems = selectFromDB(dbPath=pathToDB, table="videos") # GETS ALL OF THE DATA FROM THE TABLE "videos"
+    videoItems = selectFromDB(dbPath=config.pathToDB, table="videos") # GETS ALL OF THE DATA FROM THE TABLE "videos"
     return render_template("video.html", videoItems=videoItems, user=current_user, isAdmin=session.get("isAdmin", False))
 
 
@@ -72,7 +69,7 @@ def generateRstpPaths():
 
 
     rtspLink = "rtsp://admin:Troll2014@192.168.1.20:554"
-    selectedCamera = selectFromDB(dbPath=pathToDB, table="camera", argumentList=["WHERE"], columnList=["ipAdress"], valueList=[rtspLink])
+    selectedCamera = selectFromDB(dbPath=config.pathToDB, table="camera", argumentList=["WHERE"], columnList=["ipAdress"], valueList=[rtspLink])
 
     while True:
         if selectedCamera[0][3] == True: # CHECKS IF THE RSTP COLUMN IS TRUE

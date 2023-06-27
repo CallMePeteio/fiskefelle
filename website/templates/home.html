@@ -264,7 +264,7 @@
                           <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton2">
                               <form method="post">
                                   <input type="hidden" name="page_uuid" value="{{ page_uuid }}">
-                                  {% if cameraName != False and cameraName != None %} <!-- IF THERE IS ANY CAMERA DATA AVALIBLE -->
+                                  {% if cameraData != False and cameraData != None %} <!-- IF THERE IS ANY CAMERA DATA AVALIBLE -->
                                     {% for camera in cameraData %}
                                         {% if camera[2] == fiskefelleId %} <!-- IF THE CAMERA IS CONNECTED TO THE SELECTED FISKEFELLE -->
                                           {% if camera[5] == camIp %} <!-- IF IT IS THE SELECTED CAMERA -->
@@ -282,7 +282,7 @@
                       </div>
                   
 
-
+    
 
 
                       
