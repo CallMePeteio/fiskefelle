@@ -105,15 +105,8 @@ def create_app():
     def load_user(id):
         return User.query.get(int(id)) # Defines a callback function to load a user from the database
 
-
-    from .services.rtsp import RtspStream
-
-    rtspLink = "rtsp://admin:Troll2014@192.168.1.20:554"
-    stream = RtspStream(db, app, logging, rtspLink, (1280, 720),  10,  1, recordingsFolder)
-    threading.Thread(target=stream.readFrame, args=()).start()
-    time.sleep(0.5)
-    threading.Thread(target=stream.recordVideo, args=()).start()
-
+    from .services.rtsp import startRtspStream
+    app.stream = startRtspStream("rtsp://admin:Troll2014@192.168.1.20:554", app, logging)
 
     return app # Returns the Flask app instance
 
@@ -137,11 +130,6 @@ def create_database(app):
     if not path.exists('website/' + DB_NAME):
         db.create_all(app=app) # Creates all tables in the database
         print('Created Database!') # Prints a message indicating that the database has been created.
-
-
-
- 
-
 
 
 

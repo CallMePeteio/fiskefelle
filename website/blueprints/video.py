@@ -64,19 +64,19 @@ def videoTable():
 
 
     videoItems = selectFromDB(dbPath=pathToDB, table="videos") # GETS ALL OF THE DATA FROM THE TABLE "videos"
-    return render_template("video.html", videoItems=videoItems, user=current_user, isAdmin=session.get("isAdmin", False), is_recording=readRecStartVar())
+    return render_template("video.html", videoItems=videoItems, user=current_user, isAdmin=session.get("isAdmin", False))
 
 
 @video.route("/rtspStream", methods=["POST","GET"])      
 def generateRstpPaths():
 
-    from .. import stream
 
     rtspLink = "rtsp://admin:Troll2014@192.168.1.20:554"
     selectedCamera = selectFromDB(dbPath=pathToDB, table="camera", argumentList=["WHERE"], columnList=["ipAdress"], valueList=[rtspLink])
 
     while True:
         if selectedCamera[0][3] == True: # CHECKS IF THE RSTP COLUMN IS TRUE
+            stream = current_app.stream
             return Response(stream.generateVideo(),mimetype='multipart/x-mixed-replace; boundary=frame')
 
 

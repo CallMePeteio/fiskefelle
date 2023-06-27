@@ -95,56 +95,6 @@
 
 
 {% block javascript %}
-
-  <!-- DOWNLOAD BUTTON SCRIPT -->
-  <script>
-    document.querySelectorAll('.downloadLink').forEach(function(downloadLink) {  // SELECT ALL ELEMENTS WITH THE CLASS 'DOWNLOADLINK'
-      downloadLink.addEventListener('click', function(event) {  // ADD AN EVENT LISTENER FOR A CLICK EVENT ON EACH 'DOWNLOADLINK'
-        event.preventDefault();  // PREVENT THE DEFAULT ACTION OF THE CLICK EVENT
-        var downloadUrl = this.href;  // STORE THE HREF VALUE OF THE CLICKED LINK IN 'DOWNLOADURL'
-
-        var download = document.createElement('a');  // CREATE A NEW ANCHOR ELEMENT
-        download.href = downloadUrl;  // SET THE HREF OF THE NEW ANCHOR TO THE 'DOWNLOADURL'
-        download.download = '';  // SET THE DOWNLOAD ATTRIBUTE OF THE ANCHOR TO AN EMPTY STRING
-        download.click();  // TRIGGER A CLICK EVENT ON THE NEW ANCHOR, STARTING THE DOWNLOAD
-
-        setTimeout(function(){  // SET A TIMEOUT TO DELAY THE REDIRECTION
-            window.location = "/video";  // REDIRECT TO THE '/VIDEO' ROUTE AFTER THE DELAY
-        }, 1000);  // DELAY IS SET TO 1 SECOND (1000 MILLISECONDS), ADJUST IF NECESSARY
-      });
-    });
-  </script>
-
-
-  <!-- LIVE UPDATE USED SPACE SLIDER SCRIPT-->
-  <script>
-    // Pass the value of is_recording from Flask to JavaScript
-    var isRecording = {{ is_recording|tojson }};
-
-    // Function to fetch data from the API and update the progress bar and text
-    function updateProgressBar() {
-      fetch('/usedVidSpace')
-        .then(response => response.json())
-        .then(data => {
-          // Calculate the percentage of used space
-          var percentage = (data.usedSpace / data.maxSpace) * 100;
-
-          // Update the progress bar
-          var progressBarFill = document.getElementById('progress-bar-fill');
-          progressBarFill.style.width = percentage + '%';
-          progressBarFill.setAttribute('aria-valuenow', percentage);
-
-          // Update the text
-          var usedSpaceText = document.getElementById('used-space-text');
-          usedSpaceText.innerText = `Used Space: ${data.usedSpace}/${data.maxSpace}gb`;
-        })
-        .catch(error => console.error('Error:', error));
-    }
-
-      // Conditionally call the function based on the value of is_recording
-      updateProgressBar()
-      if (isRecording) {
-        setInterval(updateProgressBar, 15000);
-      }
-  </script>
+  <script src="{{ url_for('static', filename='js/downloadVideo.js') }}"></script> 
+  <script src="{{ url_for('static', filename='js/gbSizeBarUpdate.js') }}"></script> 
 {% endblock %}

@@ -1,6 +1,11 @@
 from ..services.dbService import addVideo
 from threading import Event
 
+from .. import recordingsFolder
+from .. import app
+from .. import db
+
+import threading
 import datetime
 import numpy
 import time
@@ -42,13 +47,19 @@ def readRecStartVar():
     return  data["startRec"] # RETURNS THE STARTREC VALUE (True or False)
 
 
+"""
+______________________________________ getDirSize _____________________________________
+This function gets the file size inside a certian directory.
+It returns an integer that is the size of the element sin the dir in GB
 
+start_path = This is the full path to the directory you want to get the size of
+
+"""
 def getDirSize(start_path = '.'):
     total_size = 0
     for dirpath, dirnames, filenames in os.walk(start_path):
         for f in filenames:
             fp = os.path.join(dirpath, f)
-            # skip if it is symbolic link
             if not os.path.islink(fp):
                 total_size += os.path.getsize(fp)
 
@@ -57,6 +68,12 @@ def getDirSize(start_path = '.'):
     return size_in_gb
 
 
+def startRtspStream(rtspLink, app, logger):
+    stream = RtspStream(db, app, logger, rtspLink, (1280, 720),  10,  1, recordingsFolder)
+    threading.Thread(target=stream.readFrame, args=()).start()
+    time.sleep(0.5)
+    threading.Thread(target=stream.recordVideo, args=()).start()
+    return stream
 
 
 class RtspStream():
@@ -75,6 +92,7 @@ class RtspStream():
         self.logging = logging
 
         self.frameEvent = Event()
+        self.startRecoring = False
 
         self.camera=cv2.VideoCapture(rtspLink)
 
@@ -89,12 +107,11 @@ class RtspStream():
     def recordVideo(self): # THIS FUNCTION RECORDS VIDEOS, AND GETS FRAMES THAT IS READ FROM "readFrame" FUNCTION (self.frame)
         while True: # LOOPS INFINATLY
             time.sleep(1)
-            if readRecStartVar() == True: # CHECKS IF THE USER WANTS TO START RECORDING
+            if self.startRecoring: # CHECKS IF THE USER WANTS TO START RECORDING
                 currentTime = datetime.datetime.now().strftime("%d-%m-%Y_%H:%M:%S") # GETS THE CUREENT TIME IN (DAY,MONTH,YEAR HOUR-MINUTE-SECOND) FORMAT
                 name = str(currentTime) # CONVERTS THE DATETIME OBJECT TO A STRING, FOR NAME USAGE
 
                 recDir = os.path.abspath(self.recordingsFolder) # FINDS THE FULL PATH TO THE RECORDING DIR
-                #recDir = os.path.abspath("website/recordings") # FINDS THE FULL PATH TO THE RECORDING DIR
                 recPath = os.path.join(recDir, name + ".avi") # APPENDS THE FILE NAME + THE .avi EXTENTION
 
                 writer = cv2.VideoWriter(recPath, cv2.VideoWriter_fourcc(*'XVID'), self.fps, self.res) # MAKES THE VIDEOWRITER OBJECT
@@ -104,7 +121,7 @@ class RtspStream():
         
 
                 
-                while readRecStartVar() == True or readRecStartVar() == None and int(time.time() - startTime) < 3600 * 100: # WHILE THE "startRec" VALUE FROM THE JSON FILE IS TRUE OR RETURNS NONE (error reading), AND IT HAS GONE LESS THAN 100 HRS
+                while self.startRecoring and int(time.time() - startTime) < 3600 * 100: # WHILE THE "startRec" VALUE FROM THE JSON FILE IS TRUE OR RETURNS NONE (error reading), AND IT HAS GONE LESS THAN 100 HRS
                     self.frameEvent.wait() # WAITS FOR A NEW FRAME EVENT
                     writer.write(self.frame) # WRITES THE FRAME TO THE VIDEOWRITER OBJECT NOTE THE INPUT FPS MUST MATCH THE FPS OF THE CAMERA TO GET CORRECT LENGTH
                     self.frameEvent.clear()
@@ -113,7 +130,7 @@ class RtspStream():
                 # NOTE ADDS TWO VIDEOS TO THE DB FOR SOME REASON
                 elapsedTime = convertSecToHMS(int(time.time() - startTime)) # GETS THE ELAPSED TIME AND RETURNS A STRING IN (hr:min:sec) FORMAT        
                 addVideo(self.app, self.userId, name, elapsedTime)
-        
+                self.startRecoring = False
                 writer.release() # CLOSES THE WRITER OBJECT (makes a new one when the user wants to record another video)
 
 

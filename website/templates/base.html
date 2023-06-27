@@ -88,6 +88,7 @@
     {% block contentNoConteiner %}{% endblock %}
     <div class="container ">{% block content %} {% endblock %}</div>
 
+    
     <script
       src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
       integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
@@ -104,25 +105,7 @@
       crossorigin="anonymous"
     ></script>
 
-    <!-- UPDATE TEMPERATRUE CODE -->
-    <script>
-      document.addEventListener('DOMContentLoaded', (event) => {
-          function fetchTemperature() {
-              fetch('/temperature') 
-                  .then(response => response.json())
-                  .then(data => {
-                      document.getElementById('temperatureDisplay').innerText = 'Temperature: ' + data.temperature + '°C';
-                  })
-                  .catch(error => console.error('Error:', error));
-          }
-        
-          // Call fetchTemperature immediately
-          fetchTemperature();
-        
-          // Set interval to call fetchTemperature every 5 seconds
-          setInterval(fetchTemperature, 5000);
-      });
-    </script>
+    <script src="{{ url_for('static', filename='js/updateTemp.js') }}"></script>
 
     {% block javascript %}
     {% endblock %}

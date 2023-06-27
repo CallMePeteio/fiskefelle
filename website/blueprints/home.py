@@ -4,6 +4,7 @@ from flask_login import login_required
 from flask_login import current_user
 
 from flask import render_template
+from flask import current_app
 from flask import Blueprint
 from flask import request
 from flask import session
@@ -134,16 +135,14 @@ def home_():
             recDirSize = getDirSize(recDir) # GETS THE SIZE OF ALL OF THE ITEMS IN THE DIRECTORY IN GB
             
             if recDirSize <= maxRecordSizeGB:
-                setStartRecVar(True) # STARTS RECORDING (video.py)
+                current_app.stream.startRecoring = True
             else:
-                setStartRecVar(True)
+                current_app.stream.startRecoring = False
                 
                 flash(f"There is not enough space to start another video, used size: {recDirSize}gb/{maxRecordSizeGB}gb", category='error')
             
         elif request.form.get("stopRecording"):
-
-            setStartRecVar(False)
-            time.sleep(0.5)
+            current_app.stream.startRecoring = False
                    
 
     cache.set('page_cam_ips', page_cam_ips)
@@ -158,5 +157,5 @@ def home_():
 
 
 
-    return render_template("home.html", user=current_user, isAdmin=session.get("isAdmin", False), cameraName=getNameAndAdminCamera(session.get("cameraTable", False)), cameraData=session.get("cameraTable", False), camIp=camIp, fiskefelleId=fiskefelleId, page_uuid=page_uuid, fiskefelleData=session.get("fiskefelleTable", False), gateData=session.get("gateTable", False), isRtsp=isRtsp, is_recording=readRecStartVar())
+    return render_template("home.html", user=current_user, isAdmin=session.get("isAdmin", False), cameraName=getNameAndAdminCamera(session.get("cameraTable", False)), cameraData=session.get("cameraTable", False), camIp=camIp, fiskefelleId=fiskefelleId, page_uuid=page_uuid, fiskefelleData=session.get("fiskefelleTable", False), gateData=session.get("gateTable", False), isRtsp=isRtsp)
 

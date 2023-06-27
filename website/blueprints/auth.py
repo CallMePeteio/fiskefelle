@@ -46,7 +46,7 @@ def login():
                 session["userTable"] = selectFromDB(pathToDB, "user", log=False) # UPDATES THE USER CACHE
                 session["startRec"] = False # SETS THE DEFAULT VALUE IF YOU SHULD START RECORDING (DONT RECORD)
                 
-                return redirect(url_for('views.home')) # REDIRECTS THE USER TO HOME
+                return redirect("/") # REDIRECTS THE USER TO HOME
 
             else:
                 flash('Incorrect password, try again.', category='error') # FLASHES THE INCORRECT PASSWORD MESSAGE 
