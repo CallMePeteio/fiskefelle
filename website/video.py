@@ -12,19 +12,17 @@ from flask import request
 from flask import jsonify
 
 
+from .physical.rtsp import readRecStartVar
 from .models import Videos
 
-from . import readRecStartVar
 from . import maxRecordSizeGB
 from . import selectFromDB
-from . import getDirSize
+from . import getDirSize    
 from . import pathToDB
 from . import logging
-from . import stream
 from . import app
 from . import db
 
-import subprocess
 import threading 
 import datetime
 import sqlite3
@@ -39,20 +37,6 @@ video = Blueprint('video', __name__) # MAKES THE BLUPRINT OBJECT
 
 
 
-#def generateVideo(rtspLink, res, fps, userId):
-#
-#
-#    camera=cv2.VideoCapture(rtspLink)
-#    while True:            
-#        success = False
-#        while success == False: # LOOPS TO ENSURE THAT WE ARE ON THE LAST FRAME
-#            success,frame=camera.read() # READS THE CAMERA FRAME
-#            if success: # IF THE FRAME IS THE NEWEST
-#                ret,buffer=cv2.imencode('.jpg',frame) 
-#                frame=buffer.tobytes() # CONVERTS THE FRAME TO A BYTEARRAY
-#                
-#        yield(b'--frame\r\n'
-#                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
 
 
@@ -94,8 +78,9 @@ def videoTable():
 def generateRstpPaths():
 
     # NOTE NEEED TO FIGURE OUT A WAY FOR ONLY AUTHORIZED USERS TO VIEW THE STREAM 
+    from . import stream
 
-    rtspLink = "rtsp://root:Troll2014!@192.168.1.21/axis-media/media.amp"
+    rtspLink = "rtsp://admin:Troll2014@192.168.1.20:554"
     selectedCamera = selectFromDB(dbPath=pathToDB, table="camera", argumentList=["WHERE"], columnList=["ipAdress"], valueList=[rtspLink])
 
     while True:
@@ -109,19 +94,6 @@ def downloadVideo(name):
     return send_from_directory(recordings_dir, name + ".avi", as_attachment=True)
 
 
-@video.route('/temperature', methods=['GET']) 
-@login_required
-def getTemperature():
-    process = subprocess.Popen(['vcgencmd', 'measure_temp'], stdout=subprocess.PIPE)
-    output, _error = process.communicate()
-    temperature = output.decode('UTF-8')
-
-    # The output is in the format of 'temp=XX.X'C, so we will split the string
-    temperatureValue = temperature.split('=')[1].split("'")[0]
-
-    return jsonify({'temperature': temperatureValue})
-
-
 @video.route("/usedVidSpace", methods=["GET"])
 @login_required
 def getUsedVidSpace():
@@ -132,100 +104,3 @@ def getUsedVidSpace():
 
 
 
-
-
-
-
-
-#
-#def generateVideo(rtspLink, res, fps, userId):
-#
-#
-#    hasRecorded = False
-#    camera=cv2.VideoCapture(rtspLink)
-#    while True:
-#        startRec = readRecStartVar() == True or readRecStartVar == None and int(time.time() - startTime) < 3600 * 2 # CHECKS IF THE SCRIPT SHULD START RECORDING
-#
-##------------- WHEN STARTED RECORDING 
-#        if startRec == True and hasRecorded == False: # IF WE WANT TO START RECORDING AND WE HAVENT RECORDED A FRAME YET
-#            currentTime = datetime.datetime.now().strftime("%d-%m-%Y_%H:%M:%S") # GETS THE CUREENT TIME IN (DAY,MONTH,YEAR HOUR-MINUTE-SECOND) FORMAT
-#            name = str(currentTime) # CONVERTS THE DATETIME OBJECT TO A STRING, FOR NAME USAGE
-#
-#            recDir = os.path.abspath("website/recordings") # FINDS THE FULL PATH TO THE RECORDING DIR
-#            recPath = os.path.join(recDir, name + ".avi") # APPENDS THE FILE NAME + THE .avi EXTENTION
-#
-#            writer = cv2.VideoWriter(recPath, cv2.VideoWriter_fourcc(*'XVID'), fps, res) # MAKES THE VIDEOWRITER OBJECT
-#            startTime = time.time() # SETS TGE START TIME, TO CALCULATE THE TOTAL LENGTH OF THE VIDEO
-#
-#            logging.info("      Started recording!")
-#            
-#            
-#
-##------------- WHEN RECORDING
-#        success = False
-#        while success == False: # LOOPS TO ENSURE THAT WE ARE ON THE LAST FRAME
-#            success,frame=camera.read() # READS THE CAMERA FRAME
-#            if success: # IF THE FRAME IS THE NEWEST
-#                if startRec: # IF THE USER WANTS TO RECORD
-#                    writer.write(frame) # WRITES THE FRAME TO THE VIDEOWRITER OBJECT NOTE THE INPUT FPS MUST MATCH THE FPS OF THE CAMERA TO GET CORRECT LENGTH
-#                    hasRecorded = True # SAYS THAT WE HAVE RECORDED
-#
-#                ret,buffer=cv2.imencode('.jpg',frame) 
-#                frame=buffer.tobytes() # CONVERTS THE FRAME TO A BYTEARRAY
-#                
-#
-#
-##------------- WHEN FINISHED RECORDING
-#        if startRec == False and hasRecorded == True: # IF WE ARE NOT RECORDING AND WE HAVE FINISHED RECORDING
-#            with app.app_context(): # OPENS WITH APP CONTEXT TO ALLOW TO WRITE TO THE DB
-#                elapsedTime = convertSecToHMS(int(time.time() - startTime)) # GETS THE ELAPSED TIME AND RETURNS A STRING IN (hr:min:sec) FORMAT
-#                video_ = Videos(userId=userId, fileName=name, duration=elapsedTime) # ADDS THE VIDEO INTO THE DB
-#                db.session.add(video_)
-#                db.session.commit()   
-#
-#                writer.release() # CLOSES THE WRITER OBJECT (makes a new one when the user wants to record another video)
-#                hasRecorded = False # RESETS THE FINISHED REC VARIABLE
-#
-#                logging.info("      Stopped recording!")
-#
-#                
-#
-#
-#        yield(b'--frame\r\n'
-#                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-#
-#
-#
-#    def recordVideo(rtspLink, res, fps, userId):
-#
-#        while True: 
-#            time.sleep(1)
-#            if readRecStartVar() == True or readRecStartVar == None:
-#                currentTime = datetime.datetime.now().strftime("%d-%m-%Y_%H:%M:%S") # GETS THE CUREENT TIME IN (DAY,MONTH,YEAR HOUR-MINUTE-SECOND) FORMAT
-#                name = str(currentTime) # CONVERTS THE DATETIME OBJECT TO A STRING, FOR NAME USAGE
-#
-#                recDir = os.path.abspath("website/recordings") # FINDS THE FULL PATH TO THE RECORDING DIR
-#                recPath = os.path.join(recDir, name + ".avi") # APPENDS THE FILE NAME + THE .avi EXTENTION
-#
-#                writer = cv2.VideoWriter(recPath, cv2.VideoWriter_fourcc(*'XVID'), fps, res) # MAKES THE VIDEOWRITER OBJECT
-#                startTime = time.time() # SETS TGE START TIME, TO CALCULATE THE TOTAL LENGTH OF THE VIDEO
-#
-#                camera=cv2.VideoCapture(rtspLink)
-#
-#                logging.info("      Started recording!")
-#
-#                while readRecStartVar() == True or readRecStartVar == None and int(time.time() - startTime) < 3600 * 2:
-#                    success,frame=camera.read() # READS THE CAMERA FRAME
-#                    if success: # IF THE FRAME IS THE NEWEST
-#                        writer.write(frame) # WRITES THE FRAME TO THE VIDEOWRITER OBJECT NOTE THE INPUT FPS MUST MATCH THE FPS OF THE CAMERA TO GET CORRECT LENGTH
-#
-#
-#
-#                with app.app_context(): # OPENS WITH APP CONTEXT TO ALLOW TO WRITE TO THE DB
-#                    elapsedTime = convertSecToHMS(int(time.time() - startTime)) # GETS THE ELAPSED TIME AND RETURNS A STRING IN (hr:min:sec) FORMAT
-#                    video_ = Videos(userId=userId, fileName=name, duration=elapsedTime) # ADDS THE VIDEO INTO THE DB
-#                    db.session.add(video_)
-#                    db.session.commit()   
-#
-#                    writer.release() # CLOSES THE WRITER OBJECT (makes a new one when the user wants to record another video)
-#                    logging.info("      Stopped recording!")

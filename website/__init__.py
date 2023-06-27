@@ -5,8 +5,8 @@ from flask_login import LoginManager
 from flask_caching import Cache
 from flask import Flask
 
-from .relay import switchFan
-from .relay import Relay
+from .physical.relay import switchFan
+from .physical.relay import Relay
 
 import threading
 import datetime
@@ -21,88 +21,6 @@ import cv2
 import os
 
 
-def convertSecToHMS(seconds):
-    hours, remainder = divmod(seconds, 3600)
-    minutes, seconds = divmod(remainder, 60)
-    return "{:02}:{:02}:{:02}".format(int(hours), int(minutes), int(seconds))
-def readRecStartVar():
-    instanceDir = os.path.abspath("instance") # GETS THE FULL PATH OF THE INSTANCE DIRECTORY
-    recJsonPath = instanceDir + "/startRecord.json" # MAKES THE FULL PATH TO THE JOSN FILE
-
-
-    try: 
-        with open(recJsonPath) as f:
-            data = json.load(f)
-    except:
-        return None
-
-    return  data["startRec"]
-
-class RtspStream():
-    def __init__(self, db, rtspLink, res, fps, userId):
-        
-        self.rtspLink = rtspLink
-        self.res = res
-        self.fps = fps
-
-        self.userId = userId
-        self.frame = None
-
-        self.db = db
-
-        self.camera=cv2.VideoCapture(rtspLink)
-
-    def readFrame(self): 
-        while True:
-            success = False
-            while success == False:
-                success, self.frame = self.camera.read()
-
-
-    def recordVideo(self):
-        while True: 
-            time.sleep(1)
-            if readRecStartVar() == True:
-                currentTime = datetime.datetime.now().strftime("%d-%m-%Y_%H:%M:%S") # GETS THE CUREENT TIME IN (DAY,MONTH,YEAR HOUR-MINUTE-SECOND) FORMAT
-                name = str(currentTime) # CONVERTS THE DATETIME OBJECT TO A STRING, FOR NAME USAGE
-
-                recDir = os.path.abspath("website/recordings") # FINDS THE FULL PATH TO THE RECORDING DIR
-                recPath = os.path.join(recDir, name + ".avi") # APPENDS THE FILE NAME + THE .avi EXTENTION
-
-                writer = cv2.VideoWriter(recPath, cv2.VideoWriter_fourcc(*'XVID'), self.fps, self.res) # MAKES THE VIDEOWRITER OBJECT
-                startTime = time.time() # SETS TGE START TIME, TO CALCULATE THE TOTAL LENGTH OF THE VIDEO
-
-                logging.info("      Started recording!")
-                print(f"recordVideo called in thread {threading.get_ident()}")
-
-                prevFrame = self.frame
-                while readRecStartVar() == True or readRecStartVar() == None and int(time.time() - startTime) < 3600 * 100:
-                    if not numpy.array_equal(self.frame, prevFrame):
-                        prevFrame = self.frame
-                        writer.write(self.frame) # WRITES THE FRAME TO THE VIDEOWRITER OBJECT NOTE THE INPUT FPS MUST MATCH THE FPS OF THE CAMERA TO GET CORRECT LENGTH
-
-                with app.app_context(): # OPENS WITH APP CONTEXT TO ALLOW TO WRITE TO THE DB¨
-                    from .models import Videos
-                    elapsedTime = convertSecToHMS(int(time.time() - startTime)) # GETS THE ELAPSED TIME AND RETURNS A STRING IN (hr:min:sec) FORMAT
-                    video_ = Videos(userId=self.userId, fileName=name, duration=elapsedTime) # ADDS THE VIDEO INTO THE DB
-                    self.db.session.add(video_)
-                    self.db.session.commit()   
-
-                    writer.release() # CLOSES THE WRITER OBJECT (makes a new one when the user wants to record another video)
-                    logging.info("      Stopped recording!") 
-
-
-    def generateVideo(self):
-        prevFrame = self.frame
-
-        while True: 
-            if not numpy.array_equal(self.frame, prevFrame):
-                prevFrame = self.frame
-                ret, buffer = cv2.imencode(".jpg", self.frame)
-                byteArr=buffer.tobytes() # CONVERTS THE FRAME TO A BYTEARRAY
-
-                yield(b'--frame\r\n'
-                           b'Content-Type: image/jpeg\r\n\r\n' + byteArr + b'\r\n')
 
 
 global cache
@@ -125,15 +43,11 @@ logger.setLevel(loggingLevel) # SETS THE LEVEL AS DEFINED ABOVE
 logger = formatFont(logger)
 
 
-rtspLink = "rtsp://root:Troll2014!@192.168.1.21/axis-media/media.amp"
-stream = RtspStream(db, rtspLink, (1280, 720),  8,  1)
-threading.Thread(target=stream.readFrame, args=()).start()
-time.sleep(0.5)
-threading.Thread(target=stream.recordVideo, args=()).start()
 
-relay = Relay(i2cAdress=0x20, initialState=[0,0,0,0,0,0]) # MAKES THE RELAY OBJECT, FOR CONTROLLING THE RELAY HAT
-threading.Thread(target=switchFan, args=(2, 50, 75, 5)).start()
+#relay = Relay(i2cAdress=0x20, initialState=[0,0,0,0,0,0]) # MAKES THE RELAY OBJECT, FOR CONTROLLING THE RELAY HAT
+#threading.Thread(target=switchFan, args=(2, 50, 75, 5)).start()
 maxRecordSizeGB = 200
+
 
 
 
@@ -149,6 +63,7 @@ Returns:
 The function returns a Flask application instance.
 """
 def create_app():
+    global stream
     global cache
     global app
 
@@ -184,7 +99,18 @@ def create_app():
     def load_user(id):
         return User.query.get(int(id)) # Defines a callback function to load a user from the database
 
+
+    from .physical.rtsp import RtspStream
+
+    rtspLink = "rtsp://admin:Troll2014@192.168.1.20:554"
+    stream = RtspStream(db, app, logging, rtspLink, (1280, 720),  10,  1)
+    threading.Thread(target=stream.readFrame, args=()).start()
+    time.sleep(0.5)
+    threading.Thread(target=stream.recordVideo, args=()).start()
+
+
     return app # Returns the Flask app instance
+
 
 
 
@@ -208,9 +134,7 @@ def create_database(app):
 
 
 
-
-
-
+ 
 
 
 

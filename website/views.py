@@ -2,8 +2,9 @@ from flask import Blueprint, render_template, request, flash, session, jsonify
 from flask_login import login_required, current_user
 from werkzeug.security import generate_password_hash
 
+from .physical.rtsp import readRecStartVar
+
 from . import getNameAndAdminCamera
-from . import readRecStartVar
 from . import selectFromDB
 
 from .models import FiskeFelle
@@ -18,7 +19,7 @@ from . import getDirSize
 from . import pathToDB
 from . import logging 
 from . import cache
-from . import relay
+#from . import relay
 from . import db
 import sqlite3
 import json
@@ -91,6 +92,7 @@ def home():
             camIp = getDefaultIp(fiskefelleId) # GET A DEFAULT IP (FIRST TIME OPENING THE PAGE)
 
             page_cam_ips[page_uuid] = camIp # SETS THE UNIQUE IDENTIFYER
+            
             pageDefaultFiskefelle[page_uuid] = fiskefelleId # SETS THE UNIQUE IDENTIFYER
 
     
@@ -101,14 +103,14 @@ def home():
 #------------------------------- GATES
         if request.form.get("open"): # IF SOMEONE CLICS A BUTTON THAT IS SUPPOSED TO OPEN A GATE
             relayChannel = int(request.form.get("open")) -1 # GETS WHAT RELAY CHANNEL TO OPEN
-            relay.updateRelayState(1, relayChannel) # UPDATES THE RELAY HAT, CHANGES THE WANTED RELAY TO 1 (high)
+            #relay.updateRelayState(1, relayChannel) # UPDATES THE RELAY HAT, CHANGES THE WANTED RELAY TO 1 (high)
 
             flash(f"Sucsessfully opened the Gate on channel: {relayChannel+1}", category="sucsess")
             logging.info(f"   Opened relay channel: {relayChannel +1}") # LOGS THE ACTION
 
         elif request.form.get("close"): # IF SOMEONE CLICS A BUTTON THAT IS SUPPOSED TO OPEN A GATE
             relayChannel = int(request.form.get("close")) -1 # GETS WHAT RELAY CHANNEL TO OPEN
-            relay.updateRelayState(0, relayChannel) # UPDATES THE RELAY HAT, CHANGES THE WANTED RELAY TO + (low)
+            #relay.updateRelayState(0, relayChannel) # UPDATES THE RELAY HAT, CHANGES THE WANTED RELAY TO + (low)
             
             flash(f"Sucsessfully Closed the Gate on channel: {relayChannel+1}", category="sucsess")
             logging.info(f"   Closed relay channel: {relayChannel +1}") # LOGS THE ACTION
@@ -138,15 +140,17 @@ def home():
         elif request.form.get("startRecording"):
             recDir = os.path.abspath("website/recordings") # FINDS THE FULL PATH TO THE RECORDING DIR
             recDirSize = getDirSize(recDir) # GETS THE SIZE OF ALL OF THE ITEMS IN THE DIRECTORY IN GB
+            
             if recDirSize <= maxRecordSizeGB:
                 setStartRecVar(True) # STARTS RECORDING (video.py)
             else:
-                setStartRecVar(False) # MAKES SURE THAT THERE ISNT ANY RECORDING RUNNING STOPS RECORDING (video.py)
+                setStartRecVar(True)
+                
                 flash(f"There is not enough space to start another video, used size: {recDirSize}gb/{maxRecordSizeGB}gb", category='error')
             
         elif request.form.get("stopRecording"):
 
-            setStartRecVar(False) # STOPS RECORDING (video.py)
+            setStartRecVar(False)
             time.sleep(0.5)
                    
 
