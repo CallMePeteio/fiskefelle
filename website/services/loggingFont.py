@@ -1,4 +1,4 @@
-from . import logging
+from .. import logging
 
 
 class CustomFormatter(logging.Formatter):

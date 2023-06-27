@@ -1,17 +1,24 @@
 
 from flask import Blueprint, render_template, request, flash, session
+from flask import send_from_directory
 from flask import jsonify
 
 from flask_login import login_required, current_user
 from werkzeug.security import generate_password_hash
 
+from ..services.rtsp import getDirSize
+
+from .. import recordingsFolder
+from .. import maxRecordSizeGB
+
 import subprocess
+import os
 
 
 
-backEnd = Blueprint('backEnd', __name__) # MAKES THE BLUPRINT OBJECT
+api = Blueprint('api', __name__) # MAKES THE BLUPRINT OBJECT
 
-@backEnd.route('/cameraJson', methods=['GET'])
+@api.route('/cameraJson', methods=['GET'])
 @login_required
 def cameraJson():
     cameraTable = session.get("cameraTable", False)
@@ -22,7 +29,7 @@ def cameraJson():
     return str(cameraTable)
 
 
-@backEnd.route('/temperature', methods=['GET']) 
+@api.route('/temperature', methods=['GET']) 
 @login_required
 def getTemperature():
     process = subprocess.Popen(['vcgencmd', 'measure_temp'], stdout=subprocess.PIPE)
@@ -34,3 +41,16 @@ def getTemperature():
     return jsonify({'temperature': temperatureValue})
 
 
+@api.route("video/download/<name>")
+def downloadVideo(name):
+    recordings_dir = os.path.abspath(recordingsFolder)
+    return send_from_directory(recordings_dir, name + ".avi", as_attachment=True)
+
+
+@api.route("/usedVidSpace", methods=["GET"])
+@login_required
+def getUsedVidSpace():
+    recDir = os.path.abspath(recordingsFolder) # FINDS THE FULL PATH TO THE RECORDING DIR
+    recDirSize = getDirSize(recDir)
+
+    return jsonify({"usedSpace": recDirSize, "maxSpace": maxRecordSizeGB})

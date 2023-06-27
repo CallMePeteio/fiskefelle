@@ -5,8 +5,8 @@ from flask_login import LoginManager
 from flask_caching import Cache
 from flask import Flask
 
-from .physical.relay import switchFan
-from .physical.relay import Relay
+from .services.relay import switchFan
+from .services.relay import Relay
 
 import threading
 import datetime
@@ -31,12 +31,14 @@ DB_NAME = "database.db"
 pathToDataStorage = "/home/pi/fiskefelle/instance/"
 pathToDB = pathToDataStorage + DB_NAME
 
+recordingsFolder = "website/static/recordings"
+
 
 """
 Level: NOTSET > DEBUG > INFO > WARNING > ERROR > CRITICAL
 Value:   0    >  10   >  20  >    30   >  40   >  50
 """
-from .loggingFont import formatFont
+from .services.loggingFont import formatFont
 loggingLevel = 20 # DEFINES THE LOGGING LEVEL
 logger = logging.getLogger() # MAKES THE LOGGING OBJECT
 logger.setLevel(loggingLevel) # SETS THE LEVEL AS DEFINED ABOVE
@@ -76,13 +78,17 @@ def create_app():
 
     cache = Cache(app)
 
-    from .backEnd import backEnd
-    from .views import views
-    from .auth import auth
-    from .video import video
+    from .blueprints.settings import settings
+    from .blueprints.video import video
+    from .blueprints.home import home
+    from .blueprints.auth import auth
 
-    app.register_blueprint(backEnd, url_prefix='/') # Registers the auth blueprint with the Flask app instance
-    app.register_blueprint(views, url_prefix='/') # Registers the views blueprint with the Flask app instance
+    from .blueprints.api import api
+
+
+    app.register_blueprint(api, url_prefix='/') # Registers the auth blueprint with the Flask app instance
+    app.register_blueprint(home, url_prefix='/') # Registers the views blueprint with the Flask app instance
+    app.register_blueprint(settings, url_prefix='/') # Registers the views blueprint with the Flask app instance
     app.register_blueprint(auth, url_prefix='/') # Registers the auth blueprint with the Flask app instance
     app.register_blueprint(video, url_prefix='/') # Registers the auth blueprint with the Flask app instance
 
@@ -100,10 +106,10 @@ def create_app():
         return User.query.get(int(id)) # Defines a callback function to load a user from the database
 
 
-    from .physical.rtsp import RtspStream
+    from .services.rtsp import RtspStream
 
     rtspLink = "rtsp://admin:Troll2014@192.168.1.20:554"
-    stream = RtspStream(db, app, logging, rtspLink, (1280, 720),  10,  1)
+    stream = RtspStream(db, app, logging, rtspLink, (1280, 720),  10,  1, recordingsFolder)
     threading.Thread(target=stream.readFrame, args=()).start()
     time.sleep(0.5)
     threading.Thread(target=stream.recordVideo, args=()).start()
@@ -139,69 +145,6 @@ def create_database(app):
 
 
 
-"""
-___________________________________________ selectFromDB _________________________________________
-This function reads data from a sqlite databace, it is dynamic in the sens that you could add an unlimteted parameters and unlimeded values to fit those parameters
-The sqlite3 command is strored in the variable "getString"
-dbPath = This is the path to the databace you want to read data from. example: "F:\Scripts\Python\canSat\website\instance\database.db" (str)
-table = This is the name of the table you want to read data from. example: "flightmaster" (str)
-columnList = This is the list of parameters you want to add to the "getString" variable. for example if you want to get data from column "id" then input ["id"]. If you want to inpuut and AND statment then add it in the lsit. For example if you want from the column id  where the loginId = 1 then input: ["id", "loginId"]. The value will be added under
-valueList = This is the list of values you add to the column list.
-argument = This is the argument you want to do, forexample could you add AND.
-"""
-
-def selectFromDB(dbPath, table, argumentList=None, columnList=None, valueList=None, log=True):
-    def checkIfEmpty(data): 
-        if data == []:
-            return None
-        return data
-      
-    con = sqlite3.connect(dbPath) # CONNECTS TO THE DB
-    cursor = con.cursor() # MAKES THE CURSOR, FOR SELECTING THE DATA
-    if argumentList != None and columnList != None and valueList != None: 
-
-        getString = f"SELECT * FROM '{table}' {argumentList[0]} {columnList[0]}=?" # THIS IS THE STRING THAT IS GOING TO BE THE SQLITE COMMAND, ALREADY ADDED THE FIRST DATAPOINT
-        if len(columnList) == len(valueList) or len(columnList) == 0 or len(valueList) == 0: # CHECKS IF THERE IS AN ERROR ON THE LENGTH OF THE INPUT PARAMETERS
-            if len(columnList) >= 1: # IF THE INPUT PARAMETERS IS MORE THAN ONE, THEN IT ADDS THE AND SYNTAX AND THE PARAMETER TO THE GETSTRING VARIABLE
-                for i, parameter in enumerate(columnList[1:]): # LOOPS OVER ALL OF THE EXTRA "AND" PARAMETERS
-                    getString += f"{argumentList[i+1]} {parameter}=?"
-
-
-
-                cursor.execute(getString, (valueList)) # SELECTS ALL OF THE DATA ACCORDING TO THE PARAMETERS GIVEN ABOVE
-                data = cursor.fetchall() # FETCHES ALL OF THE DATA
-
-                if log == True: # IF THE RESULTS SHULD BE LOGGED
-                    logging.info(f"     Readed data from databace, command: {getString}{valueList}") # LOGS THE DATA
-                    logging.debug(f"    data recived: {data}")
-
-                return checkIfEmpty(data) # RETURNS ALL OF THE DATA
-
-
-            cursor.execute(getString, (valueList[0],)) # SELECTS ALL OF THE GPS DATA, WE DO THIS TWICE BECAUSE THE SYNTAX OF THIS SUCS ;(, I NEED TI HAVE TRHE COMMA THERE WHAT A SHIT LIBARY
-            data = cursor.fetchall() # FETCHES ALL OF THE DATA, GIVEN THE PARAMETERS ABOVE
-
-            if log == True: # IF THE RESULTS SHULD BE LOGGED
-                logging.info(f"     Databace command (read): {getString}{valueList}") # LOGS THE DATA
-                logging.debug(f"    data recived: {data}")
-
-            return checkIfEmpty(data) # RETURNS ALL OF THE DATA
-
-        else: 
-          raise Exception(f"Parameter error when reading from DB, there has to be a value for eatch parameter. Parameters: {columnList}, Values: {valueList}") # IF THERE WAS A ERROR OF THE LENGHT OF THE DATA
-    else: 
-        getString = f"SELECT * FROM '{table}'" # THIS IS THE STRING THAT IS GOING TO BE THE SQLITE COMMAND, ALREADY ADDED THE FIRST DATAPOINT
-        cursor.execute(getString) # SELECTS ALL OF THE DATA ACCORDING TO THE PARAMETERS GIVEN ABOVE
-        data = cursor.fetchall() # FETCHES ALL OF THE DATA
-
-        if log == True: # IF THE RESULTS SHULD BE LOGGED
-            logging.info(f"     Readed data from databace, command: {getString}{valueList}") # LOGS THE DATA
-            logging.debug(f"    data recived: {data}")
-
-        return checkIfEmpty(data)
-
-
-
 
 
 def getNameAndAdminCamera(cameraTable): 
@@ -215,15 +158,4 @@ def getNameAndAdminCamera(cameraTable):
     else:
         return False
 
-def getDirSize(start_path = '.'):
-    total_size = 0
-    for dirpath, dirnames, filenames in os.walk(start_path):
-        for f in filenames:
-            fp = os.path.join(dirpath, f)
-            # skip if it is symbolic link
-            if not os.path.islink(fp):
-                total_size += os.path.getsize(fp)
 
-
-    size_in_gb = round(total_size / 1073741824, 2)  # Convert bytes to gigabytes
-    return size_in_gb

@@ -1,4 +1,4 @@
-from ..dbService import addVideo
+from ..services.dbService import addVideo
 from threading import Event
 
 import datetime
@@ -42,9 +42,27 @@ def readRecStartVar():
     return  data["startRec"] # RETURNS THE STARTREC VALUE (True or False)
 
 
+
+def getDirSize(start_path = '.'):
+    total_size = 0
+    for dirpath, dirnames, filenames in os.walk(start_path):
+        for f in filenames:
+            fp = os.path.join(dirpath, f)
+            # skip if it is symbolic link
+            if not os.path.islink(fp):
+                total_size += os.path.getsize(fp)
+
+
+    size_in_gb = round(total_size / 1073741824, 2)  # Convert bytes to gigabytes
+    return size_in_gb
+
+
+
+
 class RtspStream():
-    def __init__(self, db, app, logging, rtspLink, res, fps, userId):
+    def __init__(self, db, app, logging, rtspLink, res, fps, userId, recordingsFolder):
         
+        self.recordingsFolder = recordingsFolder
         self.rtspLink = rtspLink
         self.res = res
         self.fps = fps
@@ -68,7 +86,6 @@ class RtspStream():
 
 
 
-
     def recordVideo(self): # THIS FUNCTION RECORDS VIDEOS, AND GETS FRAMES THAT IS READ FROM "readFrame" FUNCTION (self.frame)
         while True: # LOOPS INFINATLY
             time.sleep(1)
@@ -76,7 +93,8 @@ class RtspStream():
                 currentTime = datetime.datetime.now().strftime("%d-%m-%Y_%H:%M:%S") # GETS THE CUREENT TIME IN (DAY,MONTH,YEAR HOUR-MINUTE-SECOND) FORMAT
                 name = str(currentTime) # CONVERTS THE DATETIME OBJECT TO A STRING, FOR NAME USAGE
 
-                recDir = os.path.abspath("website/recordings") # FINDS THE FULL PATH TO THE RECORDING DIR
+                recDir = os.path.abspath(self.recordingsFolder) # FINDS THE FULL PATH TO THE RECORDING DIR
+                #recDir = os.path.abspath("website/recordings") # FINDS THE FULL PATH TO THE RECORDING DIR
                 recPath = os.path.join(recDir, name + ".avi") # APPENDS THE FILE NAME + THE .avi EXTENTION
 
                 writer = cv2.VideoWriter(recPath, cv2.VideoWriter_fourcc(*'XVID'), self.fps, self.res) # MAKES THE VIDEOWRITER OBJECT
@@ -102,14 +120,11 @@ class RtspStream():
     def generateVideo(self): # THIS FUNCTION GENERATES THE VIDEO, THAT CAN BE LIVE VIEWED BY THE USER, REUTRNS A GENERATOR OBJECT
 
  
-
-
         while True: 
             self.frameEvent.wait() # WAITS FOR A NEW FRAME EVENT
             ret, buffer = cv2.imencode(".jpg", self.frame) # CONVERTS THE IMAGE TO A MEMORY BUFFER
             byteArr=buffer.tobytes() # CONVERTS THE FRAME TO A BYTEARRAY
             self.frameEvent.clear() # SAYS IT HAS GOTTEN A NEW FRAME EVENT
-
 
             yield(b'--frame\r\n'
                        b'Content-Type: image/jpeg\r\n\r\n' + byteArr + b'\r\n')

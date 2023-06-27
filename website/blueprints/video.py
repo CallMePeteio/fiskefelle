@@ -11,17 +11,17 @@ from flask import session
 from flask import request
 from flask import jsonify
 
+from ..services.dbService import selectFromDB
+from ..services.rtsp import readRecStartVar
+from ..services.rtsp import getDirSize
+from ..models import Videos
 
-from .physical.rtsp import readRecStartVar
-from .models import Videos
-
-from . import maxRecordSizeGB
-from . import selectFromDB
-from . import getDirSize    
-from . import pathToDB
-from . import logging
-from . import app
-from . import db
+from .. import recordingsFolder
+from .. import maxRecordSizeGB 
+from .. import pathToDB
+from .. import logging
+from .. import app
+from .. import db
 
 import threading 
 import datetime
@@ -35,13 +35,6 @@ import os
 video = Blueprint('video', __name__) # MAKES THE BLUPRINT OBJECT
 
 
-
-
-
-
-
-
-
 @video.route("/video", methods=["POST","GET"])
 @login_required
 def videoTable():
@@ -53,7 +46,7 @@ def videoTable():
 
         if request.form.get("deleteVideoId"):
             videoName = request.form.get("deleteVideoName") # GETS THE VIDEO NAME
-            recordingDir = os.path.abspath("website/recordings") # GETS THE FULL RECORDING PATH
+            recordingDir = os.path.abspath(recordingsFolder) # GETS THE FULL RECORDING PATH
             recordingsFile = os.path.join(recordingDir, videoName + ".avi") # ADDS THE VIDEO NAME TO THE RECORDING PATH
 
             if os.path.exists(recordingsFile): # CHECKS IF THE FILE EXISTS
@@ -77,8 +70,7 @@ def videoTable():
 @video.route("/rtspStream", methods=["POST","GET"])      
 def generateRstpPaths():
 
-    # NOTE NEEED TO FIGURE OUT A WAY FOR ONLY AUTHORIZED USERS TO VIEW THE STREAM 
-    from . import stream
+    from .. import stream
 
     rtspLink = "rtsp://admin:Troll2014@192.168.1.20:554"
     selectedCamera = selectFromDB(dbPath=pathToDB, table="camera", argumentList=["WHERE"], columnList=["ipAdress"], valueList=[rtspLink])
@@ -88,19 +80,6 @@ def generateRstpPaths():
             return Response(stream.generateVideo(),mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
-@video.route("video/download/<name>")
-def downloadVideo(name):
-    recordings_dir = os.path.abspath("website/recordings")
-    return send_from_directory(recordings_dir, name + ".avi", as_attachment=True)
-
-
-@video.route("/usedVidSpace", methods=["GET"])
-@login_required
-def getUsedVidSpace():
-    recDir = os.path.abspath("website/recordings") # FINDS THE FULL PATH TO THE RECORDING DIR
-    recDirSize = getDirSize(recDir)
-
-    return jsonify({"usedSpace": recDirSize, "maxSpace": maxRecordSizeGB})
 
 
 
