@@ -67,15 +67,21 @@ def videoTable():
 @video.route("/rtspStream", methods=["POST","GET"])      
 def generateRstpPaths():
 
+    if app.stream != None:
 
-    rtspLink = "rtsp://admin:Troll2014@192.168.1.20:554"
-    selectedCamera = selectFromDB(dbPath=config.pathToDB, table="camera", argumentList=["WHERE"], columnList=["ipAdress"], valueList=[rtspLink])
+        while app.stream.isReadingFrames == False: # WHILE THE RTSP LINK IS GETTING SETUP
+            return render_template("loading.html")
 
-    while True:
-        if selectedCamera[0][3] == True: # CHECKS IF THE RSTP COLUMN IS TRUE
-            stream = current_app.stream
-            return Response(stream.generateVideo(),mimetype='multipart/x-mixed-replace; boundary=frame')
+        while True:
+            return Response(app.stream.generateVideo(),mimetype='multipart/x-mixed-replace; boundary=frame')
+    else:
+        return render_template("error/rtspError.html")
 
+
+
+@video.route("/test", methods=["POST","GET"])      
+def test():
+    return render_template("loading.html")
 
 
 

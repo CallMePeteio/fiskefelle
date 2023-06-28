@@ -44,7 +44,6 @@ def login():
                 session['cameraTable'] = camTable # SETS THE RECIVE DATA TO A GLOBAL VARIABLE, IM USING THIS TO CASH THE TABLE "cameras", SO I DONT HAFT TO READ FORM THE DB EVRYTIME I MAKE A REQUEST
                 session["fiskefelleTable"] = fiskefeleTable # SETS THE RECIVE DATA TO A GLOBAL VARIABLE, IM USING THIS TO CASH THE TABLE "fiskefelle", SO I DONT HAFT TO READ FORM THE DB EVRYTIME I MAKE A REQUEST
                 session["userTable"] = selectFromDB(config.pathToDB, "user", log=False) # UPDATES THE USER CACHE
-                session["startRec"] = False # SETS THE DEFAULT VALUE IF YOU SHULD START RECORDING (DONT RECORD)
                 
                 return redirect("/") # REDIRECTS THE USER TO HOME
 
@@ -86,7 +85,6 @@ def debug():
             session['cameraTable'] = camTable # SETS THE RECIVE DATA TO A GLOBAL VARIABLE, IM USING THIS TO CASH THE TABLE "cameras", SO I DONT HAFT TO READ FORM THE DB EVRYTIME I MAKE A REQUEST
             session["fiskefelleTable"] = fiskefeleTable # SETS THE RECIVE DATA TO A GLOBAL VARIABLE, IM USING THIS TO CASH THE TABLE "fiskefelle", SO I DONT HAFT TO READ FORM THE DB EVRYTIME I MAKE A REQUEST
             session["userTable"] = selectFromDB(config.pathToDB, "user", log=False) # UPDATES THE USER CACHE
-            session["startRec"] = False # SETS THE DEFAULT VALUE IF YOU SHULD START RECORDING (DONT RECORD)
             session["isAdmin"] = True 
 
 

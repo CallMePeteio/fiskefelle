@@ -96,7 +96,8 @@ def create_app():
         return User.query.get(int(id)) # Defines a callback function to load a user from the database
 
     from .services.rtsp import startRtspStream
-    app.stream = startRtspStream(db, app, logging, config.rtspLink, config.resolution, config.framesPerSecond, config.userId_, config.recordingsFolder)
+    app.stream = None
+    #app.stream = startRtspStream(db, app, logging, config.rtspLink, config.resolution, config.framesPerSecond, config.userId_, config.recordingsFolder)
 
     return app # Returns the Flask app instance
 

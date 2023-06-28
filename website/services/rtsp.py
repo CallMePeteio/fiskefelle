@@ -2,6 +2,7 @@ from ..services.dbService import addRowToTable
 from threading import Event
 
 from ..models import Videos
+from .. import logging
 from .. import config
 from .. import app
 from .. import db
@@ -49,12 +50,28 @@ def getDirSize(start_path = '.'):
     return size_in_gb
 
 
+
 def startRtspStream(db, app, logger, rtspLink, res, fps, userId, recordingsFolder):
-    stream = RtspStream(db, app, logger, rtspLink, res,  fps,  userId, recordingsFolder)
-    threading.Thread(target=stream.readFrame, args=()).start()
-    time.sleep(0.5)
-    threading.Thread(target=stream.recordVideo, args=()).start()
-    return stream
+    logger.info("    Started Rtsp Stream!")
+
+
+    def startThreads():
+        stream = RtspStream(db, app, logger, rtspLink, res,  fps,  userId, recordingsFolder)
+        threading.Thread(target=stream.readFrame, args=()).start()
+        threading.Thread(target=stream.recordVideo, args=()).start()
+
+        app.stream = stream
+
+    threading.Thread(target=startThreads, args=()).start()
+    
+
+
+def stopRtspStream(stream): 
+    stream.run = False 
+    logging.info("    Stopped Rtsp Stream!")
+
+
+
 
 
 class RtspStream():
@@ -73,20 +90,27 @@ class RtspStream():
         self.logging = logging
 
         self.frameEvent = Event()
+        self.isReadingFrames = False
         self.startRecoring = False
+        self.run = True
 
         self.camera=cv2.VideoCapture(rtspLink)
 
+
+
     def readFrame(self): # THIS FUNCTION READS ALL OF THE FRAMES COMING FROM THE RTSP STREAM
 
-        while True: # WHILE SUCSESS == FALSE
+        while self.run: # WHILE IT SHULD RUN
             success, self.frame = self.camera.read() 
             self.frameEvent.set()
+            self.isReadingFrames = True
 
+
+        self.camera.release()
 
 
     def recordVideo(self): # THIS FUNCTION RECORDS VIDEOS, AND GETS FRAMES THAT IS READ FROM "readFrame" FUNCTION (self.frame)
-        while True: # LOOPS INFINATLY
+        while self.run: # LOOPS INFINATLY
             time.sleep(1)
             if self.startRecoring: # CHECKS IF THE USER WANTS TO START RECORDING
                 currentTime = datetime.datetime.now().strftime(config.videoTimeFormat) # GETS THE CUREENT TIME IN (DAY,MONTH,YEAR HOUR-MINUTE-SECOND) FORMAT
@@ -102,7 +126,7 @@ class RtspStream():
         
 
                 
-                while self.startRecoring and int(time.time() - startTime) < 3600 * 100: # WHILE THE "startRec" VALUE FROM THE JSON FILE IS TRUE OR RETURNS NONE (error reading), AND IT HAS GONE LESS THAN 100 HRS
+                while self.startRecoring and self.run and int(time.time() - startTime) < 3600 * 100: # WHILE THE "startRec" VALUE FROM THE JSON FILE IS TRUE OR RETURNS NONE (error reading), AND IT HAS GONE LESS THAN 100 HRS
                     self.frameEvent.wait() # WAITS FOR A NEW FRAME EVENT
                     writer.write(self.frame) # WRITES THE FRAME TO THE VIDEOWRITER OBJECT NOTE THE INPUT FPS MUST MATCH THE FPS OF THE CAMERA TO GET CORRECT LENGTH
                     self.frameEvent.clear()
@@ -114,9 +138,7 @@ class RtspStream():
 
 
     def generateVideo(self): # THIS FUNCTION GENERATES THE VIDEO, THAT CAN BE LIVE VIEWED BY THE USER, REUTRNS A GENERATOR OBJECT
-
- 
-        while True: 
+        while self.run: 
             self.frameEvent.wait() # WAITS FOR A NEW FRAME EVENT
             ret, buffer = cv2.imencode(".jpg", self.frame) # CONVERTS THE IMAGE TO A MEMORY BUFFER
             byteArr=buffer.tobytes() # CONVERTS THE FRAME TO A BYTEARRAY
@@ -124,3 +146,6 @@ class RtspStream():
 
             yield(b'--frame\r\n'
                        b'Content-Type: image/jpeg\r\n\r\n' + byteArr + b'\r\n')
+
+
+

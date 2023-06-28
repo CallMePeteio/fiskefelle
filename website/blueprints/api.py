@@ -9,6 +9,7 @@ from werkzeug.security import generate_password_hash
 from ..services.rtsp import getDirSize
 
 from .. import config 
+from .. import app
 
 import subprocess
 import os
@@ -53,3 +54,11 @@ def getUsedVidSpace():
     recDirSize = getDirSize(recDir)
 
     return jsonify({"usedSpace": recDirSize, "maxSpace": config.maxRecordSizeGB})
+
+
+@api.route('/rtspStreamStatus', methods=['GET'])
+def rtsp_stream_status():
+    if app.stream is not None and app.stream.isReadingFrames:
+        return {'isReadingFrames': True}
+    else:
+        return {'isReadingFrames': False}

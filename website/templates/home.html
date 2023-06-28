@@ -159,6 +159,17 @@
     justify-content: center;
   }
 
+  .stream-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.loading-circle {
+    position: absolute;
+}
+
 
 </style>
 <div class="container-fluid">
@@ -168,14 +179,19 @@
     <div class="col-md-12" id="camera-container">
       <div class="iframe-wrapper">
         <div class="embed-responsive embed-responsive-16by9">
+
           {% if isRtsp != None %}
             {% if isRtsp == 1 %}
-              <img class="embed-responsive-item" src="/rtspStream">
+                <div class="embed-responsive-item stream-container">
+                    <img class="video-stream" id="videoStream" src="/rtspStream" controls="false">
+                    <img class="loading-circle" id="loadingCircle" src="{{ url_for('static', filename='gifs/loadingCircle.gif') }}" alt="Loading...">
+                </div>
             {% else %}
-              <iframe class="embed-responsive-item" src="{{ camIp }}" allowfullscreen></iframe>
+                <iframe class="embed-responsive-item" src="{{ camIp }}" allowfullscreen></iframe>
             {% endif %}
             <iframe class="embed-responsive-item" src="{{ camIp }}" allowfullscreen></iframe>
           {% endif %}
+      
 
 
           
@@ -338,5 +354,28 @@
 
 
 {% block javascript %}
-  <script src="{{ url_for('static', filename='js/gbSizeBarUpdate.js') }}"></script> <!-- NOTE NEED TO PASS is_recording TO THIS TEMPLATE-->
+  <script src="{{ url_for('static', filename='js/gbSizeBarUpdate.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/waitForRTSP.js') }}"></script>
+
+  <script>
+    // Your JavaScript code
+    var videoStream = document.getElementById("videoStream");
+    var loadingCircle = document.getElementById("loadingCircle");
+
+    function checkStream() {
+        fetch('/rtspStreamStatus')  // A new Flask route that returns the status of the stream
+            .then(response => response.json())
+            .then(data => {
+                if (data.isReadingFrames) {  // If the stream has started
+                    loadingCircle.style.display = "none";  // Hide the loading circle
+                    videoStream.style.display = "block";  // Show the video stream
+                    videoStream.src = "/rtspStream";  // Set the source of the video stream
+                } else {  // If the stream hasn't started yet
+                    setTimeout(checkStream, 1000);  // Check again in one second
+                }
+            });
+    }
+
+    checkStream();  // Start checking the stream status when the page loads
+</script>
 {% endblock %}
