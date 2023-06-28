@@ -2,7 +2,7 @@
 
 
 
-
+#______________________________________ Databace ______________________________________
 dbName = "database.db"
 pathToDataStorage = "/home/pi/fiskefelle/instance/"
 pathToDB = pathToDataStorage + dbName

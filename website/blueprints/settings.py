@@ -2,6 +2,8 @@ from flask import Blueprint, render_template, request, flash, session, jsonify
 from flask_login import login_required, current_user
 from werkzeug.security import generate_password_hash
 
+from ..services.dbService import deleteRowColumn
+from ..services.dbService import addRowToTable
 from ..services.dbService import selectFromDB
 from ..services.rtsp import getDirSize
 
@@ -15,6 +17,7 @@ from .. import config
 from .. import logging 
 from .. import cache
 #from . import relay
+from .. import app
 from .. import db   
 import sqlite3
 import uuid
@@ -130,22 +133,14 @@ def settings_():
             isAdmin = 'newUserCheckbox' in request.form # CHECKS IF THE MAKE ADMIN CHECKBOX IS CHECKED
 
             if checkEmailAndPassword(email, password) == True: # CHECKS IF THE INPUT INFORMATION IS VALID 
-                user = User(email=email, password=generate_password_hash(password, method='sha256'), admin=isAdmin) # MAKES THE OBJECT WITH ALL OF THE DATA INPUTED
-                db.session.add(user) # ADDS THE OBJECT TO THE SESSION, FOR ADDING TO THE DB
-                db.session.commit() # COMMITS TO THE ACTION
-                setCameraCache() # UPDATED THE CAMERA CACHE
+                addRowToTable(User, {"email": email, "password": generate_password_hash(password, method='scrypt'), "admin": isAdmin}, app)
                 setUserCache() # UPDATES THE USER CACHE
 
         elif request.form.get("deleteUser"): 
             userId = request.form.get("deleteUser")
             
             if checkValidDeleteId(userId) == True: 
-                con = sqlite3.connect(config.pathToDB) # CONNECTS TO THE DB
-                cursor = con.cursor() # SETS THE CURSOR
-                cursor.execute("DELETE FROM 'user' WHERE id=?", (userId,)) # DELETES THE ROW THAT HAS BEEN PRESSED RELEASED ON
-                con.commit() # COMMITS TO THE ACTION
-                con.close()
-
+                deleteRowColumn(User, "id", userId) # DELETS THE CAMERA
                 setUserCache()  # UPDATES THE CACHE
                 flash(f"Sucsessfully deleted the User!") # Flashes a message
 
@@ -165,21 +160,13 @@ def settings_():
                 isRstp = False
             
             if checkNameIpId(name, ipAdress, fiskefelleId) == True: # CHECKS IF THE INPUT IS VALID
-                camera = Camera(userId=current_user.id, fiskeFelleId=fiskefelleId, rstp=isRstp, name=name, ipAdress=ipAdress) # MAKES THE OBJECT WITH ALL OF THE DATA INPUTED
-                db.session.add(camera) # ADDS THE OBJECT TO THE SESSION, FOR ADDING TO THE DB
-                db.session.commit() # COMMITS TO THE ACTION
+                addRowToTable(Camera, {"userId": current_user.id, "fiskeFelleId": fiskefelleId, "rstp": isRstp, "name": name, "ipAdress": ipAdress}, app)
                 setCameraCache() # UPDATES THE CACHE
 
 # --- DELETE CAMERA HANDELING
         elif request.form.get("deleteCamId"): # IF SOMEONE PRESSED THE DELETE CAM BUTTON
             camId = request.form.get("deleteCamId") # GETS THE ID OF THE BUTTON (SAME ID AS IN THE DATABACE)
-
-            con = sqlite3.connect(config.pathToDB) # CONNECTS TO THE DB
-            cursor = con.cursor() # SETS THE CURSOR
-            cursor.execute("DELETE FROM 'camera' WHERE id=?", (camId,)) # DELETES THE ROW THAT HAS BEEN PRESSED RELEASED ON
-            con.commit() # COMMITS TO THE ACTION
-            con.close()
-        
+            deleteRowColumn(Camera, "id", camId) # DELETS THE CAMERA
             setCameraCache() # UPDATES THE CACHE
             flash(f"Sucsessfully deleted the Camera!") # Flashes a message
 
@@ -193,21 +180,13 @@ def settings_():
             relayChannel = request.form.get("gateRelayChannel") # GETS WHAT RELAY CHANNEL THE BUTTON SHULD SWITCH
 
             if checkNameRelayChannel(gateName, relayChannel, fiskefelleId) == True: # CHECKS IF THERE ISNT ANYTHING WRONG WITH THE INPUT
-                gate = Gate(userId=current_user.id, fiskeFelleId=fiskefelleId, name=gateName, relayChannel=relayChannel) # MAKES THE GATE OBJECT
-                db.session.add(gate) # ADDS THE GATE TO THE SESSION
-                db.session.commit() # WRITES THE GATE TO THE DB
+                addRowToTable(Gate, {"userId": current_user.id, "fiskeFelleId": fiskefelleId, "name": gateName, "relayChannel": relayChannel}, app)
                 setGateCache() # UPDATES THE CACHE
 
 # --- DELETE GATE HANDELING
         elif request.form.get("deleteGateId"): # IF SOMEONE PRESSED THE DELETE CAM BUTTON
             gateId = request.form.get("deleteGateId") # GETS THE ID OF THE BUTTON (SAME ID AS IN THE DATABACE)
-
-            con = sqlite3.connect(config.pathToDB) # CONNECTS TO THE DB
-            cursor = con.cursor() # SETS THE CURSOR
-            cursor.execute("DELETE FROM 'gate' WHERE id=?", (gateId,)) # DELETES THE ROW THAT HAS BEEN PRESSED RELEASED ON
-            con.commit() # COMMITS TO THE ACTION
-            con.close()
-        
+            deleteRowColumn(Gate, "id", gateId) # DELETS THE GATE
             setGateCache() # UPDATES THE CACHE
             flash(f"Sucsessfully deleted the Camera!") # Flashes a message
 
@@ -220,22 +199,18 @@ def settings_():
             name = request.form.get("nameFiskefelle") # GETS THE NAME OF THE FISKEFELLE
 
             if checkFiskefelleName(name) == True: # CHECKS IF THERE ISNT ANY INVALID INPUT IN THE FISKEFELLE INPUT BOX
-                fiskefelle = FiskeFelle(userId=current_user.id, name=name) # MAKES THE FISKEFELLE OBJECT
-                db.session.add(fiskefelle) # ADDS IT TO THE SESSION
-                db.session.commit() # WRITES IT TO THE DB
+                addRowToTable(FiskeFelle, {"userId": current_user.id, "name": name}, app)
                 setFiskefelleCache() # UPDATES THE CACHE
+                
 
 # -- DELETE FISKEFELLE HANDELING
         elif request.form.get("deleteFiskefelleId"):
             fiskefelleId = request.form.get("deleteFiskefelleId") # GETS THE ID OF THE FISKELLE THAT WAS DELETED (trash can button)
 
-            con = sqlite3.connect(config.pathToDB) # CONNECTS TO THE DB
-            cursor = con.cursor() # SETS THE CURSOR
-            cursor.execute("DELETE FROM 'fiskefelle' WHERE id=?", (fiskefelleId,)) # DELETES THE ROW THAT HAS BEEN PRESSED RELEASED ON
-            cursor.execute("DELETE FROM 'camera' WHERE fiskeFelleid=?", (fiskefelleId,)) # DELEATS THE CAMERAS THAT HAS BEEN ATTATCHED TO THE FISKEFELLE
-            cursor.execute("DELETE FROM 'gate' WHERE fiskeFelleid=?", (fiskefelleId,)) # DELEATS THE GATE THAT HAS BEEN ATTATCHED TO THE FISKEFELLE
-            con.commit() # COMMITS TO THE ACTION
-            con.close() # CLOSES THE CONNECTION
+            deleteRowColumn(FiskeFelle, "id", fiskefelleId)
+            deleteRowColumn(Camera, "fiskeFelleId", fiskefelleId)
+            deleteRowColumn(Gate, "fiskeFelleId", fiskefelleId)
+
             setFiskefelleCache() # UPDATES THE CACHE
             setCameraCache() # UPDATES THE CACHE
             setGateCache() # UPDATES THE GATE CACHE

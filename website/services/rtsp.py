@@ -1,6 +1,7 @@
-from ..services.dbService import addVideo
+from ..services.dbService import addRowToTable
 from threading import Event
 
+from ..models import Videos
 from .. import config
 from .. import app
 from .. import db
@@ -106,10 +107,8 @@ class RtspStream():
                     writer.write(self.frame) # WRITES THE FRAME TO THE VIDEOWRITER OBJECT NOTE THE INPUT FPS MUST MATCH THE FPS OF THE CAMERA TO GET CORRECT LENGTH
                     self.frameEvent.clear()
 
-
-                # NOTE ADDS TWO VIDEOS TO THE DB FOR SOME REASON
                 elapsedTime = convertSecToHMS(int(time.time() - startTime)) # GETS THE ELAPSED TIME AND RETURNS A STRING IN (hr:min:sec) FORMAT        
-                addVideo(self.app, self.userId, name, elapsedTime)
+                addRowToTable(Videos, {"userId": self.userId, "fileName": name, "duration": elapsedTime}, self.app)
                 self.startRecoring = False
                 writer.release() # CLOSES THE WRITER OBJECT (makes a new one when the user wants to record another video)
 

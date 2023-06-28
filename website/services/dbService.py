@@ -2,7 +2,8 @@
 
 
 
-
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import inspect
 from flask import current_app
 from flask import session
 
@@ -15,17 +16,64 @@ from .. import db
 import sqlite3
 
 
-def addVideo(app, userId, name, duration):
-    with app.app_context(): # OPENS WITH APP CONTEXT TO ALLOW TO WRITE TO THE DB
-        video_ = Videos(userId=userId, fileName=name, duration=duration) # ADDS THE VIDEO INTO THE DB
-        db.session.add(video_) # ADDS THIS TO THE DB SESSION
-        db.session.commit() # COMMITS THE ACTION
 
+
+"""
+__________________________________________ deleteRowColumn ________________________________________
+This function is used to delete a row from a certian table
+
+Model = This is the class(model) that you want to add a row to 
+columnName = This is the name of the column you want to delete, forexample if you want to delete somehting with the id of one, then input "id"
+value = This is the value of what you want to delete, orexample if you want to delete somehting with the value of 1 then input 1
+"""
+
+def deleteRowColumn(Model, columnName, value):
+
+   
+    model_attrs = inspect(Model).attrs  # Inspect the model to get its attributes
+    column_names = [] # Create an empty list to store column names
+
+    for attr in model_attrs: # Loop over the attributes and add the keys (i.e., column names) to the list
+        column_names.append(attr.key)
+
+    
+    if columnName not in column_names: # Check if the provided column name is in the list of column names for the model
+        logging.critical(f"   Column {columnName} does not exist in table: {Model.__name__}!")
+        return
+
+    filter_condition = {columnName: value} # Use a dictionary to construct the filter condition
+    numDeleted = Model.query.filter_by(**filter_condition).delete() # Delete the rows that match the filter condition
+    db.session.commit() # Commit the changes to the database
+
+    
+    if numDeleted == 0: # Log a warning if no rows were deleted
+        logging.warning(f"   No rows found to delete in table: {Model.__name__} with {columnName}: {value}")
+
+
+
+"""
+___________________________________________ addRowToTable ________________________________________
+This function is used to add a row to a desiered table 
+
+Model = This is the class(model) that you want to add a row to 
+columnValues = This is the values of the colums, in dictionary form, forexample:
+{"userId": current_user.id, "fiskeFelleId": fiskefelleId, "rstp": isRstp, "name": name, "ipAdress": ipAdress}
+"""
+
+def addRowToTable(Model, columnValues, app):
+    with app.app_context():
+        try:
+            newRecord = Model(**columnValues)
+            db.session.add(newRecord)
+            db.session.commit()
+        except Exception as e:
+            logging.critical(f"There was an error adding new record to {Model.__tablename__} table. Error: {str(e)}")
 
 
 
 """
 ___________________________________________ selectFromDB _________________________________________
+
 This function reads data from a sqlite databace, it is dynamic in the sens that you could add an unlimteted parameters and unlimeded values to fit those parameters
 The sqlite3 command is strored in the variable "getString"
 dbPath = This is the path to the databace you want to read data from. example: "F:\Scripts\Python\canSat\website\instance\database.db" (str)
