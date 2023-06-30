@@ -58,7 +58,9 @@ def getUsedVidSpace():
 
 @api.route('/rtspStreamStatus', methods=['GET'])
 def rtsp_stream_status():
-    if app.stream is not None and app.stream.isReadingFrames:
-        return {'isReadingFrames': True}
+    if app.stream is not None and app.stream.error == True:
+        return {'isReadingFrames': 404}
+    elif app.stream is not None  and app.stream.isReadingFrames:
+        return {'isReadingFrames': 1}
     else:
-        return {'isReadingFrames': False}
+        return {'isReadingFrames': 2}

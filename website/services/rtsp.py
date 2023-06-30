@@ -59,6 +59,7 @@ def startRtspStream(db, app, logger, rtspLink, res, fps, userId, recordingsFolde
         stream = RtspStream(db, app, logger, rtspLink, res,  fps,  userId, recordingsFolder)
         threading.Thread(target=stream.readFrame, args=()).start()
         threading.Thread(target=stream.recordVideo, args=()).start()
+        threading.Thread(target=stream.checkError, args=()).start()
 
         app.stream = stream
 
@@ -67,6 +68,7 @@ def startRtspStream(db, app, logger, rtspLink, res, fps, userId, recordingsFolde
 
 
 def stopRtspStream(stream): 
+    app.stream = None
     stream.run = False 
     logging.info("    Stopped Rtsp Stream!")
 
@@ -92,25 +94,27 @@ class RtspStream():
         self.frameEvent = Event()
         self.isReadingFrames = False
         self.startRecoring = False
+        self.error = False
         self.run = True
 
         self.camera=cv2.VideoCapture(rtspLink)
 
+        if not self.camera.isOpened(): 
+            self.error = True
 
 
     def readFrame(self): # THIS FUNCTION READS ALL OF THE FRAMES COMING FROM THE RTSP STREAM
 
-        while self.run: # WHILE IT SHULD RUN
+        while self.run and self.error == False: # WHILE IT SHULD RUN
             success, self.frame = self.camera.read() 
             self.frameEvent.set()
             self.isReadingFrames = True
-
 
         self.camera.release()
 
 
     def recordVideo(self): # THIS FUNCTION RECORDS VIDEOS, AND GETS FRAMES THAT IS READ FROM "readFrame" FUNCTION (self.frame)
-        while self.run: # LOOPS INFINATLY
+        while self.run and self.error == False: # LOOPS INFINATLY
             time.sleep(1)
             if self.startRecoring: # CHECKS IF THE USER WANTS TO START RECORDING
                 currentTime = datetime.datetime.now().strftime(config.videoTimeFormat) # GETS THE CUREENT TIME IN (DAY,MONTH,YEAR HOUR-MINUTE-SECOND) FORMAT
@@ -138,7 +142,7 @@ class RtspStream():
 
 
     def generateVideo(self): # THIS FUNCTION GENERATES THE VIDEO, THAT CAN BE LIVE VIEWED BY THE USER, REUTRNS A GENERATOR OBJECT
-        while self.run: 
+        while self.run and self.error == False: 
             self.frameEvent.wait() # WAITS FOR A NEW FRAME EVENT
             ret, buffer = cv2.imencode(".jpg", self.frame) # CONVERTS THE IMAGE TO A MEMORY BUFFER
             byteArr=buffer.tobytes() # CONVERTS THE FRAME TO A BYTEARRAY
@@ -146,6 +150,11 @@ class RtspStream():
 
             yield(b'--frame\r\n'
                        b'Content-Type: image/jpeg\r\n\r\n' + byteArr + b'\r\n')
+    
+    def checkError(self): 
+        while self.error == True and self.run == True:  # KEEPS THE APP ALIVE, SO I CAN CHECK self.error
+            time.sleep(1)
+            self.logging.critical("RUN")
 
 
 

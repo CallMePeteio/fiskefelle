@@ -70,7 +70,7 @@ home = Blueprint('home', __name__) # MAKES THE BLUPRINT OBJECT
 @login_required
 def home_():
      
-
+    renderLoadingScreen = False
     page_cam_ips = cache.get('page_cam_ips') or {} # MAKES THE CAM IPS DICTIONARY IF IT HASNT BEEN MADE YET
     pageDefaultFiskefelle = cache.get('pageDefaultFiskefelle') or {} # MAKES THE CAM pageDefaultFiskefelle DICTIONARY IF IT HASNT BEEN MADE YET
 
@@ -86,9 +86,13 @@ def home_():
             page_cam_ips[page_uuid] = camIp # SETS THE UNIQUE IDENTIFYER
             pageDefaultFiskefelle[page_uuid] = fiskefelleId # SETS THE UNIQUE IDENTIFYER
 
-
-    if camIp[:4] == "rtsp" and app.stream == None: # IF IT IS A RTSP LINK
+    if camIp[:4] == "rtsp" and app.stream == None: # IF IT IS A RTSP LINK AND THE STREAM ISNT RUNNING
         startRtspStream(db=db, app=app, logger=logging, rtspLink=camIp, res=config.resolution, fps=config.framesPerSecond, userId=current_user.id, recordingsFolder=config.recordingsFolder)
+        renderLoadingScreen = True
+    elif app.stream != None: # IF THE STREAM IS RUNNING
+        camIp = app.stream.rtspLink # DEFAULT TO THE RTSP STREAM
+        
+        
 
 
 
@@ -127,25 +131,22 @@ def home_():
             camId = request.form.get("camera") # GETS THE ID OF THE CAMERA THEY WANT TO CHANGE TO
             camRow = selectFromDB(dbPath=config.pathToDB, table="camera", argumentList=["WHERE"], columnList=["id"], valueList=camId) # GETS THE ROW OF THE CAMERA THEY WANT TO VIEW
 
-    
             camIp = camRow[0][5] # FINDS THE IP
             page_cam_ips[page_uuid] = camIp # UPDATES THE UUID LINK
 
-            logging.critical(f"{app.stream} {camRow[0][3]}")
-
             if camRow[0][3] == 1: # IF THE CAMERA IS RTSP
                 if app.stream != None: # IF THERE HAS BEEN MADE A STREAMING OBJECT BEFORE
-                    logging.critical(f"{app.stream.rtspLink} {camRow[0][5]}")
                     if app.stream.rtspLink != camRow[0][5]: # IF IT IS A NEW RTSP CAMERA THAT IS GOIG TO BE USED 
                         stopRtspStream(app.stream) # STOP THE PREVOUS STREAM
                         startRtspStream(db=db, app=app, logger=logging, rtspLink=camRow[0][5], res=config.resolution, fps=config.framesPerSecond, userId=current_user.id, recordingsFolder=config.recordingsFolder)
                 else:
                     startRtspStream(db=db, app=app, logger=logging, rtspLink=camRow[0][5], res=config.resolution, fps=config.framesPerSecond, userId=current_user.id, recordingsFolder=config.recordingsFolder)
                 
+                renderLoadingScreen = True
                 logging.info(f"     Sucsessfully started the rtsp stream with name: {camRow[0][4]}")
             elif app.stream != None: # IF THE CAMERA ISNT RTSP AND THERE IS A RTSP STREAM RUNNING
                 stopRtspStream(app.stream) # STOP THE STREAM
-                app.stream = None
+
 
 
 #------------------------------- RECORDING
@@ -155,14 +156,14 @@ def home_():
             recDir = os.path.abspath("website/recordings") # FINDS THE FULL PATH TO THE RECORDING DIR
             recDirSize = getDirSize(recDir) # GETS THE SIZE OF ALL OF THE ITEMS IN THE DIRECTORY IN GB
             
-            if recDirSize <= config.maxRecordSizeGB:
-                current_app.stream.startRecoring = True
-            else:
-                current_app.stream.startRecoring = False
-                
-                flash(f"There is not enough space to start another video, used size: {recDirSize}gb/{config.maxRecordSizeGB}gb", category='error')
+            if current_app.stream != None:
+                if recDirSize <= config.maxRecordSizeGB:
+                    current_app.stream.startRecoring = True
+                else:
+                    current_app.stream.startRecoring = False 
+                    flash(f"There is not enough space to start another video, used size: {recDirSize}gb/{config.maxRecordSizeGB}gb", category='error')
             
-        elif request.form.get("stopRecording"):
+        elif request.form.get("stopRecording") and current_app.stream != None:
             current_app.stream.startRecoring = False
                    
 
@@ -176,7 +177,15 @@ def home_():
     else:
         isRtsp = None
 
+    if current_app.stream != None:
+        is_recording = current_app.stream.startRecoring
+        rtspError = current_app.stream.error
+    else:
+        is_recording = False
+        rtspError = False
+
+    
 
    
-    return render_template("home.html", user=current_user, isAdmin=session.get("isAdmin", False), cameraData=session.get("cameraTable", False), camIp=camIp, fiskefelleId=fiskefelleId, page_uuid=page_uuid, fiskefelleData=session.get("fiskefelleTable", False), gateData=session.get("gateTable", False), isRtsp=isRtsp, is_recording=False)
+    return render_template("home.html", user=current_user, isAdmin=session.get("isAdmin", False), cameraData=session.get("cameraTable", False), camIp=camIp, fiskefelleId=fiskefelleId, page_uuid=page_uuid, fiskefelleData=session.get("fiskefelleTable", False), gateData=session.get("gateTable", False), isRtsp=isRtsp, is_recording=is_recording, renderLoadingScreen=renderLoadingScreen, rtspError=rtspError)
 

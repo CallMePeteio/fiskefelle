@@ -160,7 +160,6 @@
   }
 
   .stream-container {
-    position: relative;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -169,6 +168,12 @@
 .loading-circle {
     position: absolute;
 }
+
+
+#errorContainerWrapper {
+    position: relative;
+}
+
 
 
 </style>
@@ -182,15 +187,35 @@
 
           {% if isRtsp != None %}
             {% if isRtsp == 1 %}
-                <div class="embed-responsive-item stream-container">
-                    <img class="video-stream" id="videoStream" src="/rtspStream" controls="false">
-                    <img class="loading-circle" id="loadingCircle" src="{{ url_for('static', filename='gifs/loadingCircle.gif') }}" alt="Loading...">
+              <div class="embed-responsive-item stream-container">
+                <img class="video-stream" id="videoStream" controls="false" style="display: none; height:100%; width:100%">
+
+                <div class="text-center mt-5" id="errorContainer" style="display: none;">
+                  <h1 class="display-1">Oops!</h1>
+                  <p class="lead text-muted">There was an error connecting the RTSP stream.</p>
+
+                  {% if isAdmin == True %}
+                    <p class="lead text-muted">Check out the RTSP Link in the settings page!</p>
+                  {% else %}
+                    <p class="lead text-muted">Contact Administrator To Get The Issue Fixed!</p>
+                  {% endif %}
                 </div>
+
+                {% if renderLoadingScreen == True %}  
+                  <div id="loadingCircleContainer" style="border: 2px solid black; height:100%; width:100%; display:flex; align-items:center; justify-content:center;">
+                    <img class="loading-circle" id="loadingCircle" src="{{ url_for('static', filename='gifs/loadingCircle.gif') }}" alt="Loading..." style="max-width: 90%; max-height: 90%;">
+                  </div>
+                {% endif %}
+
+          
+              </div>
             {% else %}
                 <iframe class="embed-responsive-item" src="{{ camIp }}" allowfullscreen></iframe>
             {% endif %}
             <iframe class="embed-responsive-item" src="{{ camIp }}" allowfullscreen></iframe>
           {% endif %}
+
+
       
 
 
@@ -358,24 +383,19 @@
   <script src="{{ url_for('static', filename='js/waitForRTSP.js') }}"></script>
 
   <script>
-    // Your JavaScript code
-    var videoStream = document.getElementById("videoStream");
-    var loadingCircle = document.getElementById("loadingCircle");
+    var img = document.getElementById('rtspStreamImg');
 
-    function checkStream() {
-        fetch('/rtspStreamStatus')  // A new Flask route that returns the status of the stream
-            .then(response => response.json())
-            .then(data => {
-                if (data.isReadingFrames) {  // If the stream has started
-                    loadingCircle.style.display = "none";  // Hide the loading circle
-                    videoStream.style.display = "block";  // Show the video stream
-                    videoStream.src = "/rtspStream";  // Set the source of the video stream
-                } else {  // If the stream hasn't started yet
-                    setTimeout(checkStream, 1000);  // Check again in one second
-                }
-            });
+    function loadImage() {
+      var random = Math.random();
+      img.src = '/rtspStream?' + random;
     }
+    
+    img.onerror = function() {
+        setTimeout(loadImage, 500);
+    };
 
-    checkStream();  // Start checking the stream status when the page loads
-</script>
+    loadImage();
+  </script>
+
+
 {% endblock %}

@@ -66,7 +66,6 @@ def videoTable():
 
 @video.route("/rtspStream", methods=["POST","GET"])      
 def generateRstpPaths():
-
     if app.stream != None:
 
         while app.stream.isReadingFrames == False: # WHILE THE RTSP LINK IS GETTING SETUP
