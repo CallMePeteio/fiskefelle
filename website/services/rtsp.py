@@ -153,8 +153,7 @@ class RtspStream():
     
     def checkError(self): 
         while self.error == True and self.run == True:  # KEEPS THE APP ALIVE, SO I CAN CHECK self.error
-            time.sleep(1)
-            self.logging.critical("RUN")
+            time.sleep(5)
 
 
 

@@ -3,6 +3,7 @@ var videoStream = document.getElementById("videoStream");
 var loadingCircle = document.getElementById("loadingCircle");
 var loadingCircleContainer = document.getElementById("loadingCircleContainer");
 var errorContainer = document.getElementById("errorContainer");
+var startRecBtn = document.getElementById("startRecBtn");
 
 function checkStream() {
     fetch('/rtspStreamStatus')  // A new Flask route that returns the status of the stream
@@ -15,6 +16,8 @@ function checkStream() {
                 loadingCircleContainer.style.display = "none";  // Hide the border
                 loadingCircle.style.display = "none";  // Hide the loading circle
                 errorContainer.style.display = "block" // SHOW THE ERROR MESAGE  
+                startRecBtn.setAttribute("disabled", ""); // ADDS THE DISABLED ATTRIBUTE TO THE START REC BTN
+
             }
         
             else if (data.isReadingFrames == 1) {  // If the stream has started 
@@ -23,9 +26,11 @@ function checkStream() {
                 videoStream.style.display = "block";  // Show the video stream
                 loadingCircle.style.display = "none";  // Hide the loading circle
                 loadingCircleContainer.style.border = "none";  // Hide the border
+                startRecBtn.removeAttribute("disabled"); // REMOVES THE DISABLED ATTRIBUTE TO THE START REC BTN
             } 
             
             else {  // If the stream hasn't started yet
+                startRecBtn.setAttribute("disabled", ""); // ADDS THE DISABLED ATTRIBUTE TO THE START REC BTN
                 setTimeout(checkStream, 1000);  // Check again in one second
             }
         });
