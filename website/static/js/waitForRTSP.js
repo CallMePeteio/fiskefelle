@@ -14,16 +14,12 @@ function checkStream() {
                 loadingCircleContainer.style.border = "none";  // Hide the border
                 loadingCircleContainer.style.display = "none";  // Hide the border
                 loadingCircle.style.display = "none";  // Hide the loading circle
-
-                errorContainer.style.display = "block" // SHOW THE ERROR MESAGE
-
-                
+                errorContainer.style.display = "block" // SHOW THE ERROR MESAGE  
             }
         
             else if (data.isReadingFrames == 1) {  // If the stream has started 
                 videoStream.src = "/rtspStream";  // Set the source of the video stream
                 errorContainer.style.display = "none" // SHOW THE ERROR MESAGE
-
                 videoStream.style.display = "block";  // Show the video stream
                 loadingCircle.style.display = "none";  // Hide the loading circle
                 loadingCircleContainer.style.border = "none";  // Hide the border
