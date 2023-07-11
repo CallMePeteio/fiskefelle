@@ -32,6 +32,46 @@ import os
 video = Blueprint('video', __name__) # MAKES THE BLUPRINT OBJECT
 
 
+def convertToMin(timeStr):
+    hour, min, sec = map(int, timeStr.split(":"))
+    return hour * 60 + min + sec/60
+
+def transformList(videoItems):
+
+    if videoItems != None and len(videoItems) >= 1:
+
+        dayVidLen, dayAmountVid = 0, 0
+        finishedList, workingList, numLengthList = [], [], []
+        dateSelector = videoItems[0][2].split("-")[0] # FINDS THE FIRST ITEMS DATE
+
+        for video in videoItems:
+            date = video[2].split("-")[0] # FINDS THE VIDEOITEMS DATE
+
+            if date == dateSelector: 
+                workingList.append(video)
+            else:
+                numLengthList.append((round(dayVidLen, 1), dayAmountVid))
+                finishedList.append(workingList.copy())
+                workingList.clear()
+                
+                workingList.append(video)
+                dateSelector = date
+                dayVidLen = 0
+                dayAmountVid = 0
+
+            dayAmountVid += 1
+            videoTime = video[3]
+            dayVidLen += convertToMin(videoTime)
+
+        finishedList.append(workingList.copy())
+        numLengthList.append((round(dayVidLen, 1), dayAmountVid))
+
+        return finishedList, numLengthList
+    
+    else:
+        return None, None
+
+
 @video.route("/video", methods=["POST","GET"])
 @login_required
 def videoTable():
@@ -61,7 +101,9 @@ def videoTable():
 
 
     videoItems = selectFromDB(dbPath=config.pathToDB, table="videos") # GETS ALL OF THE DATA FROM THE TABLE "videos"
-    return render_template("video.html", videoItems=videoItems, user=current_user, isAdmin=session.get("isAdmin", False))
+    videoItems, numLengthList = transformList(videoItems)
+
+    return render_template("video.html", videoItems=videoItems, numLengthList=numLengthList, user=current_user, isAdmin=session.get("isAdmin", False))
 
 
 @video.route("/rtspStream", methods=["POST","GET"])      
@@ -77,10 +119,6 @@ def generateRstpPaths():
         return render_template("error/rtspError.html")
 
 
-
-@video.route("/test", methods=["POST","GET"])      
-def test():
-    return render_template("loading.html")
 
 
 

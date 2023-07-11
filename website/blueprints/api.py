@@ -52,7 +52,6 @@ def downloadVideo(name):
 def getUsedVidSpace():
     recDir = os.path.abspath(config.recordingsFolder) # FINDS THE FULL PATH TO THE RECORDING DIR
     recDirSize = getDirSize(recDir)
-
     return jsonify({"usedSpace": recDirSize, "maxSpace": config.maxRecordSizeGB})
 
 

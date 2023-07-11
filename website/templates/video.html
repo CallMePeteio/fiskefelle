@@ -17,15 +17,21 @@
       padding: 15px; 
     }
     /* Add this rule */
-    .table tbody tr:hover {
-      border: 2px solid #0062cc; /* Border color on hover */
-      cursor: pointer;
+  .table tbody tr:not(.no-hover-border):hover {
+    border: 2px solid #0062cc; /* Border color on hover */
+    cursor: pointer;
+  }
+
+    .rowFontStyle{
+      font-size: 1.1em;
+      font-weight: 500; 
     }
+
   </style>
 
 <div class="container mt-5">
   <div class="card p-5" style="margin: auto;">
-    <h2 class="text-center mb-4">Recorded Videos</h2> 
+    <h2 class="text-center mb-4" style="font-size: 2.5em;">Recorded Videos</h2> 
 
     <!-- RECORDED VIDEO SIZE BAR -->
     <div class="progress position-relative mb-3" id="progress-bar">
@@ -39,11 +45,10 @@
     <table class="table table-striped table-hover">
       <thead class="thead-primary">
         <tr>
-          <th scope="col">#</th>
-          <th scope="col">Name</th>
-          <th scope="col">Lenght</th>
-          <th scope="col">Download</th>
-          <th scope="col">Delete</th>
+          <th scope="col" style="font-size: 1.3em;">#</th>
+          <th scope="col" style="font-size: 1.3em;">Date</th>
+          <th scope="col" style="font-size: 1.3em;">Number of Videos</th>
+          <th scope="col" style="font-size: 1.3em;">Total Length</th>
         </tr>
       </thead>
 
@@ -51,38 +56,57 @@
       <tbody>
 
         {% if videoItems != None and videoItems != False %}
-            {% for video in videoItems %}
-                <tr>
-                  <th scope="row">{{ video[0] }}</th>
-                  <td>{{ video[2] }}</td>
-                  <td>{{ video[3] }}</td>
+            {% for videoDay in videoItems %}
+                <tr data-toggle="collapse" data-target="#video-{{ videoDay[0][0] }}" class="clickable">
+                  <th scope="row rowFontStyle">{{ loop.index }}</th>
+                  <td class="overview rowFontStyle">{{ videoDay[0][2][:10] }}</td>
+                  <td class="overview rowFontStyle">{{ numLengthList[loop.index -1][1] }}</td>
+                  <td class="overview rowFontStyle">{{ numLengthList[loop.index -1][0] }} Min</td>
+                </tr>
 
-                    <!-- DOWNLOAD BUTTON -->
-                  <td>
-                    <form method="post">
-                      <input type="hidden" name="downloadVideoId" value="{{ video[0] }}">
-                      <a href="/video/download/{{ video[2] }}" class="btn btn-secondary downloadLink">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-download" viewBox="0 0 16 16">
-                            <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
-                            <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
-                        </svg>
-                      </a>
-                    </form> 
-                  </td>
+                <!-- Hidden row with additional data -->
+                <tr id="video-{{ videoDay[0][0] }}" class="collapse no-hover-border">
+                  <td colspan="5">
+                    <!-- Inside Table -->
+                    <table class="table">
+                      <tbody>
+                        {% for video in videoDay %}
+                          <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ video[2][11:] }}</td>
+                            <td>{{ video[3] }}</td>
 
+                            <td>
+                              <form method="post">
+                                <input type="hidden" name="downloadVideoId" value="{{ video[0] }}">
+                                <a href="/video/download/{{ video[2] }}" class="btn btn-secondary downloadLink">
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-download" viewBox="0 0 16 16">
+                                      <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                                      <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+                                  </svg>
+                                </a>
+                              </form> 
+                            </td>
+          
+          
+                            <!-- DELETE BUTTON -->
+                            <td>
+                              <form method="post">
+                                <input type="hidden" name="deleteVideoId" value="{{ video[0] }}">
+                                <input type="hidden" name="deleteVideoName" value="{{ video[2] }}">
+                                <button type="submit" class="btn btn-secondary" name="deleteVideoBtn">
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                                    <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                                  </svg>
+                                </button>
+                              </form>
+                            </td>
+                          </tr>
 
-                  <!-- DELETE BUTTON -->
-                  <td>
-                    <form method="post">
-                      <input type="hidden" name="deleteVideoId" value="{{ video[0] }}">
-                      <input type="hidden" name="deleteVideoName" value="{{ video[2] }}">
-                      <button type="submit" class="btn btn-secondary" name="deleteVideoBtn">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
-                          <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
-                          <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
-                        </svg>
-                      </button>
-                    </form>
+                        {% endfor %}
+                      </tbody>
+                    </table>
                   </td>
                 </tr>
             {% endfor %}
@@ -97,4 +121,5 @@
 {% block javascript %}
   <script src="{{ url_for('static', filename='js/downloadVideo.js') }}"></script> 
   <script src="{{ url_for('static', filename='js/gbSizeBarUpdate.js') }}"></script> 
+
 {% endblock %}

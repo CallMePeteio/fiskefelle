@@ -1,4 +1,5 @@
 from ..services.dbService import addRowToTable
+from .miscServices import convertSecToHMS
 from threading import Event
 
 from ..models import Videos
@@ -15,18 +16,6 @@ import json
 import cv2
 import os
 
-
-"""
-___________________________________ convertSecToHMS ___________________________________
-This function converts seconds to HR:MIN:SEC format
-
-Seconds = This is the amout of seconds you want to change to H:M:S format
-
-"""
-def convertSecToHMS(seconds):
-    hours, remainder = divmod(seconds, 3600)
-    minutes, seconds = divmod(remainder, 60)
-    return "{:02}:{:02}:{:02}".format(int(hours), int(minutes), int(seconds))
 
 
 """
